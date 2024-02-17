@@ -71,19 +71,19 @@ workflows:
           context: boxhead-builds
       - security:
           context: boxhead-builds
-#      - release:
-#          context: boxhead-builds
-#          requires:
-#            - build
-#            - security
-#          filters:
-#            branches:
-#              only: /^(?:main|master)$/
-#      - publish:
-#          context: boxhead-builds
-#          filters:
-#            # only act on version tags
-#            branches:
-#              ignore: /.*/
-#            tags:
-#              only: /^release-\d+\.\d+\.\d+$/       
+      - release:
+          context: boxhead-builds
+          requires:
+            - build
+            - security
+          filters:
+            branches:
+              only: /^(?:main|master)$/
+      - publish:
+          context: boxhead-builds
+          filters:
+            # only act on version tags
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^release-\d+\.\d+\.\d+$/       
