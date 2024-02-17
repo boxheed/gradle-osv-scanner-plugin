@@ -26,7 +26,7 @@ sourceSets {
     }
     resources {
       srcDir 'buildSrc/src/main/resources'
-      exclude 'META-INF/gradle-plugins/com.fizzpod.osvscanner.properties'
+      exclude 'META-INF/gradle-plugins/com.fizzpod.osv-scanner.properties'
     }
     groovy {
       srcDir 'buildSrc/src/main/groovy'
@@ -47,18 +47,16 @@ sourceSets {
 
 dependencies {
   api gradleApi()
-  api localGroovy()
-  
-  
+  api localGroovy()  
 }
 
 
 gradlePlugin {
   plugins {
     plugin {
-      description = 'Gradle plugin to integrate osv-scanner into a gradle project.'
-      tags.set(['osv-scanner', 'security', 'owasp', 'cve', 'nvd', 'vulnerability', 'osv'])
-      id = 'com.fizzpod.osvscanner'
+      description = 'Gradle plugin to integrate osv-scanner (vulnerability scanning) into a gradle project.'
+      tags.set(['osv-scanner', 'security', 'owasp', 'cve', 'nvd', 'vulnerability', 'osv', 'devsecops'])
+      id = 'com.fizzpod.osv-scanner'
       displayName = 'Gradle OSV Scanner Plugin'
       implementationClass = 'com.fizzpod.gradle.plugins.osvscanner.OSVScannerPlugin'
     }
