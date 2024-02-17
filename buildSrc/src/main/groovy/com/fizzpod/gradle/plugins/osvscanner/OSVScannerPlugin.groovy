@@ -6,10 +6,12 @@ import org.gradle.api.Project
 public class OSVScannerPlugin implements Plugin<Project> {
 
 	public static final String NAME = "osvScanner"
-	public static final String GROUP = "osv-scanner"
+	public static final String GROUP = "OSV Scanner"
+	public static final String EXE_NAME = "osv-scanner"
 
 	void apply(Project project) {
 		project.extensions.create(NAME, OSVScannerPluginExtension)
-		OSVScannerDownloadTask.register(project)
+		OSVScannerInstallTask.register(project)
+		OSVScannerScanTask.register(project)
 	}
 }

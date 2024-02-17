@@ -1,11 +1,20 @@
 repositories {
-  mavenCentral()
+	mavenCentral()
 }
 
 dependencies {
 
+  implementation 'org.kohsuke:github-api:1.318'
+  implementation 'commons-io:commons-io:2.15.1'
 
+  //########################################################
+  //overriding the provided versions of these libraries as
+  // they are not compatible with the dependency check plugin
+  implementation 'org.apache.commons:commons-lang3:3.14.0'
+  implementation 'org.apache.commons:commons-text:1.11.0'
+  //########################################################
   
-
-  testImplementation 'com.netflix.nebula:nebula-test:10.5.0'
+	testImplementation('com.netflix.nebula:nebula-test:10.5.0') {
+        exclude group: 'org.codehaus.groovy'
+  }
 }
