@@ -35,7 +35,7 @@ public class OSVScannerInstallTask extends DefaultTask {
             type: OSVScannerInstallTask,
             dependsOn: [],
             group: OSVScannerPlugin.GROUP,
-            description: 'Creates a release on Github and uploads artefacts'])
+            description: 'Downloads and installs osv-scanner'])
     }
 
     @TaskAction

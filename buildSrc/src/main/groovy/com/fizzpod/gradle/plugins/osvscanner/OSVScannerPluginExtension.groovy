@@ -6,4 +6,7 @@ public class OSVScannerPluginExtension {
     def repository = "google/osv-scanner"
     def os = null
     def arch = null
+    def mode = "recursive"
+    def format = "json"
+    def flags = ""
 }
