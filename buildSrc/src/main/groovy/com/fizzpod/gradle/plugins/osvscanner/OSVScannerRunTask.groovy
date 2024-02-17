@@ -58,7 +58,9 @@ public class OSVScannerRunTask extends DefaultTask {
             case 'sarif': suffix = "sarif"; break;
             default: suffix = "txt";
         }
-        return new File(reportFolder, OSVScannerPlugin.EXE_NAME + "." + suffix)
+        def reportFile = new File(reportFolder, OSVScannerPlugin.EXE_NAME + "." + suffix)
+        println(reportFile)
+        return reportFile
     }
 
     def getExecutable(def context) {
@@ -99,7 +101,6 @@ public class OSVScannerRunTask extends DefaultTask {
         proc.waitFor()
         def exitValue = proc.exitValue()
         def myFile = new File('mySuperFile.txt')
-        
         println(sout)
         println(serr)
         context.report.write(sout.toString())
