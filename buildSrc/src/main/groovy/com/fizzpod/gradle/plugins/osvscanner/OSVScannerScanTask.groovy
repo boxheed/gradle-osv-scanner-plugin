@@ -9,14 +9,14 @@ import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.io.FileUtils
 import org.kohsuke.github.*
 
-public class OSVScannerRunTask extends DefaultTask {
+public class OSVScannerScanTask extends DefaultTask {
 
-    public static final String NAME = "osvRun"
+    public static final String NAME = "osvScan"
 
     private Project project
 
     @Inject
-    public OSVScannerRunTask(Project project) {
+    public OSVScannerScanTask(Project project) {
         this.project = project
     }
 
@@ -25,7 +25,7 @@ public class OSVScannerRunTask extends DefaultTask {
         def taskContainer = project.getTasks()
 
         taskContainer.create([name: NAME,
-            type: OSVScannerRunTask,
+            type: OSVScannerScanTask,
             dependsOn: [],
             group: OSVScannerPlugin.GROUP,
             description: 'Runs osv-scanner on your project'])
