@@ -29,7 +29,7 @@ jobs:
       - checkout
       - run: ./gradlew --write-locks resolveAndLockAll
       - run: ./gradlew osvInstall
-      - run: ./gradlew osvRun
+      - run: ./gradlew osvScan
 
   release:
     docker:
