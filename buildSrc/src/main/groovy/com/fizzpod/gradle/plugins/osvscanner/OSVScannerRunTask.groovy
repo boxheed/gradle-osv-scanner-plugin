@@ -59,7 +59,6 @@ public class OSVScannerRunTask extends DefaultTask {
             default: suffix = "txt";
         }
         def reportFile = new File(reportFolder, OSVScannerPlugin.EXE_NAME + "." + suffix)
-        println(reportFile)
         return reportFile
     }
 
@@ -101,9 +100,10 @@ public class OSVScannerRunTask extends DefaultTask {
         proc.waitFor()
         def exitValue = proc.exitValue()
         def myFile = new File('mySuperFile.txt')
-        println(sout)
-        println(serr)
+        context.logger.lifecycle(serr.toString())
+        context.logger.lifecycle(sout.toString())
         context.report.write(sout.toString())
+        context.logger.lifecycle("Output written to " + context.report)
         if(exitValue > 0 && exitValue < 127) {
             throw new RuntimeException("Vulnerabilities found")
         }
