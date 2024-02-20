@@ -71,7 +71,7 @@ The following is an example configuration overriding the default version, format
 
 ```
 osvScanner {
-	version "v1.6.1"
+    version "v1.6.1"
     format = "table"
     flags = "--no-ignore"
 }
