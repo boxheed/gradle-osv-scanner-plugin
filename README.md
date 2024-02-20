@@ -2,7 +2,7 @@
 
 # Gradle OSV-Scanner Plugin
 
-The Gradle OSV Scanner Plugin is a convenient integration of the OSV Scanner, a standalone command-line tool for scanning open source dependencies for known vulnerabilities. This plugin simplifies the process of running vulnerability scans on your project's dependencies directly from your Gradle build scripts.
+The Gradle OSV Scanner Plugin is a convenient integration of the [OSV Scanner](http://osv.dev), a standalone command-line tool for scanning open source dependencies for known vulnerabilities. This plugin simplifies the process of running vulnerability scans on your project's dependencies directly from your Gradle build scripts.
 
 ## Features
 
