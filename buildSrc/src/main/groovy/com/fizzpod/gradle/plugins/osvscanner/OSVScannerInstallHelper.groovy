@@ -38,6 +38,14 @@ public class OSVScannerHelper {
         return new File(getInstallRoot(context), getBinaryName(context))
     }
 
+    static def getBinaryFromConfig(def context) {
+        def binary = context.extension.binary
+        if(binary != null && !"".equals(binary.trim())) {
+            return new File(binary)
+        }
+        return getBinaryFile(context)
+    }
+
     static def getOs(def context) {
         def os = null
         if(context.extension.os != null) {

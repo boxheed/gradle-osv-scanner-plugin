@@ -65,7 +65,7 @@ public class OSVScannerScanTask extends DefaultTask {
     }
 
     def getExecutable(def context) {
-        def binary = getBinaryFile(context)
+        def binary = getBinaryFromConfig(context)
         if(!binary.exists()) {
             throw new RuntimeException("Cannot find osv-scanner binary on path " + binary)
         }
