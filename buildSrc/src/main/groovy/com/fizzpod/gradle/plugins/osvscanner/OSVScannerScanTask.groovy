@@ -9,6 +9,8 @@ import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.io.FileUtils
 import org.kohsuke.github.*
 
+import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
+
 public class OSVScannerScanTask extends DefaultTask {
 
     public static final String NAME = "osvScan"
@@ -42,7 +44,7 @@ public class OSVScannerScanTask extends DefaultTask {
         context.flags = getFlags(context)
         context.cmd = createCommand(context)
         context.report = getReportFile(context)
-        runScanner(context)
+        doScan(context)
     }
 
     def getReportFile(def context) {
@@ -63,18 +65,12 @@ public class OSVScannerScanTask extends DefaultTask {
     }
 
     def getExecutable(def context) {
-        def extension = context.extension
-        def buildDir = project.buildDir
-        def installFolder = new File(buildDir, extension.location)
-        def osvFile = new File(installFolder, OSVScannerPlugin.EXE_NAME)
-        if(!osvFile.exists()) {
-            osvFile = new File(installFolder, OSVScannerPlugin.EXE_NAME + ".exe")
+        def binary = getBinaryFile(context)
+        if(!binary.exists()) {
+            throw new RuntimeException("Cannot find osv-scanner binary on path " + binary)
         }
-        if(!osvFile.exists()) {
-            throw new RuntimeException("Cannot find osv-scanner binary")
-        }
-        context.logger.info("Using osv-scanner: {}", osvFile)
-        return osvFile
+        context.logger.info("Using osv-scanner: {}", binary)
+        return binary
     }
 
     def getFlags(def context) {
@@ -93,7 +89,7 @@ public class OSVScannerScanTask extends DefaultTask {
         return commandParts.join(" ")
     }
         
-    def runScanner(def context) {
+    def doScan(def context) {
         def sout = new StringBuilder(), serr = new StringBuilder()
         def proc = context.cmd.execute()
         proc.waitForProcessOutput(sout, serr)
@@ -102,6 +98,7 @@ public class OSVScannerScanTask extends DefaultTask {
         def myFile = new File('mySuperFile.txt')
         context.logger.lifecycle(serr.toString())
         context.logger.lifecycle(sout.toString())
+        context.report.getParentFile().mkdirs()
         context.report.write(sout.toString())
         context.logger.lifecycle("Output written to " + context.report)
         if(exitValue > 0 && exitValue < 127) {
