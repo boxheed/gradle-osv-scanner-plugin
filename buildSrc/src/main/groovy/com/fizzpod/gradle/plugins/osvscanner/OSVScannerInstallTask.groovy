@@ -9,6 +9,8 @@ import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.io.FileUtils
 import org.kohsuke.github.*
 
+import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
+
 public class OSVScannerInstallTask extends DefaultTask {
 
     public static final String NAME = "osvInstall"
@@ -19,6 +21,8 @@ public class OSVScannerInstallTask extends DefaultTask {
     
     public static final String AMD64 = "amd64"
     public static final String ARM64 = "arm64"
+
+    public static final String OSV_INSTALL_DIR = ".osv-scanner"
 
     private Project project
 
@@ -49,41 +53,46 @@ public class OSVScannerInstallTask extends DefaultTask {
         context.arch = getArch(context)
         context.release = getRelease(context)
         context.asset = getAsset(context)
-        downloadScanner(context);
+        context.location = getCacheLocation(context)
+        download(context)
+        install(context)
     }
 
-    def getOs(def context) {
-        def os = null
-        if(context.extension.os != null) {
-            os = context.extension.os
-        } else  if(SystemUtils.IS_OS_WINDOWS) {
-            os = WINDOWS
-        } else if(SystemUtils.IS_OS_MAC) {
-            os = MAC
-        } else if(SystemUtils.IS_OS_LINUX) {
-            os = LINUX
+    def install(def context) {
+        def version = context.release.getName()
+        def installFolder = getInstallRoot(context)
+        def osvFile = new File(installFolder, context.location.getName())
+        def versionFile = new File(installFolder, 'osv-scanner.version')
+        def contents = ""
+        if(versionFile.exists()) {
+            contents = versionFile.getText()
         }
-        if(os == null) {
-            throw new RuntimeException("Unsupported operating system for os-scanner: " + SystemUtils.OS_NAME)
+        if(version.equalsIgnoreCase(contents) && osvFile.exists()) {
+            return
         }
-        context.logger.info("OS resolved to {}", os);
-        return os;
+        FileUtils.copyFile(context.location, osvFile)
+        osvFile.setExecutable(true)
+        versionFile.write(context.release.getName())
+    }
+    def getInstallRoot(def context) {
+        def root = context.project.rootDir
+        return new File(root, OSV_INSTALL_DIR)
     }
 
-    def getArch(def context) {
-        def systemArch = SystemUtils.OS_ARCH
-        //Assume ARM
-        def arch = ARM64
-        if(context.extension.arch != null) {
-            arch = context.extension.arch
-        } else 
-        if(systemArch.equalsIgnoreCase("x86_64") || systemArch.equalsIgnoreCase("amd64")) {
-            return AMD64
-        } 
-        context.logger.info("Architecture resolved to {}", arch)
-        return ARM64
+//TODO Think about using a .cache directory and downloading binaries for all OS and ARCH
+
+    def getCacheLocation(def context) {
+        def root = context.project.rootDir
+        def osvInstallRoot = new File(root, OSV_INSTALL_DIR)
+        def release = context.release
+        def version = release.getName()
+
+        def osvInstallLocation = new File(osvInstallRoot, ".cache/" + version)
+        def osvFileName = getBinaryName(context)
+        def osvFile = new File(osvInstallLocation, osvFileName)
+        return osvFile
     }
-        
+
     def getRelease(def context) {
         def extension = context.extension
         GitHub github = GitHub.connectAnonymously();
@@ -122,21 +131,19 @@ public class OSVScannerInstallTask extends DefaultTask {
         return osvAsset
     }
     
-    def downloadScanner(def context) {
+    def download(def context) {
         def project = context.project
         def extension = context.extension
         def buildDir = project.buildDir
         def asset = context.asset
         def url = asset.getBrowserDownloadUrl()
         context.logger.info("osv-scanner url resolved to {}", url)
-        def installFolder = new File(buildDir, extension.location)
-        def osvFile = new File(installFolder, OSVScannerPlugin.EXE_NAME)
-        if(context.os.equals(WINDOWS)) {
-            osvFile = new File(installFolder, OSVScannerPlugin.EXE_NAME + ".exe")
-        }
+        def osvFile = context.location
         context.logger.info("Writing osv-scanner to  {}", osvFile)
-        FileUtils.copyURLToFile(new URL(url), osvFile, 120000, 120000)
-        osvFile.setExecutable(true)
+        if(!osvFile.exists()){
+            FileUtils.copyURLToFile(new URL(url), osvFile, 120000, 120000)
+            osvFile.setExecutable(true)
+        }
     }
 
 }

@@ -46,6 +46,9 @@ You can use the `osvInstall` task to download and install osv-scanner. By defaul
 ./gradlew osvInstall
 ```
 
+Installation of a binary is within the `.osv-scanner` directory. The binaries are cached within a `.cache` directory within the 
+`.osv-scanner` directory. You should ensure that the `.osv-scanner/.cache` folder is in your `.gitignore` file. Optionally if you would rather dynamically install the `osv-scanner` binary then also add the `.osv-scanner` folder.
+
 ### Running a scan
 You can use the `osvScan` task to initiate a vulnerability scan. By default, the scan will analyze all dependencies declared in your project, however note that for gradle projects you need to create lock files. 
 See [Locking dependency versions](https://docs.gradle.org/current/userguide/dependency_locking.html) in the Gradle documentation

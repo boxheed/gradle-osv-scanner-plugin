@@ -9,4 +9,5 @@ public class OSVScannerPluginExtension {
     def mode = "recursive"
     def format = "json"
     def flags = ""
+    def binary = ""
 }
