@@ -69,14 +69,16 @@ The plugin supports a limited number of configurable settings that affect it's b
 | mode | `recursive` | Currently this is the only mode supported |
 | format | `table`, `json`, `markdown`, `sarif`, `gh-annotations` | The format for the ouput report, defaults to `json` |
 | flags | string `""` | Any flags to pass through to osv-scanner |
+| binary | string `""` | Optional specify the location of a pre-installed `osv-scanner` binary. If specified this will be used instead of a downloaded version using `osvInstall` |
 
-The following is an example configuration overriding the default version, format and passing through a flag.
+The following is an example configuration overriding the default version, format, passing through a flag and overriding the installation location of osv-scanner.
 
 ```
 osvScanner {
     version "v1.6.1"
     format = "table"
     flags = "--no-ignore"
+    binary = "/tmp/osv-scanner"
 }
 ```
 
