@@ -11,4 +11,5 @@ public class OSVScannerPluginExtension {
     def flags = ""
     def binary = ""
     def licences = ""
+    def sbom = ""
 }
