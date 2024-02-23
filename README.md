@@ -40,11 +40,12 @@ apply plugin: 'com.fizzpod.osv-scanner'
 ## Tasks
 
 | Task | Description | Osv Scanner Flag |
-|------|-------------|----------|
+|------|-------------|------------------|
 | `osvInstall` | Installs appropriate version of osv-scanner | |
 | `osvScan` | Scans the repository | `--recursive` |
 | `osvExperimentalLicencesSummary` | Runs the licence summary | `--experimental-licences-summary` | 
 | `osvExperimentalLicences` | Runs the licence check with the list of licences defined in the `licence` setting | `--experimental-licences` | 
+| `osvSbom` | Runs a scan on an SBOM file | `--sbom` |
 
 ### Installation of osv-scanner
 You can use the `osvInstall` task to download and install osv-scanner. By default, this will install the latest version of osv-scanner in the `build/osv-scanner` folder.
@@ -62,6 +63,13 @@ See [Locking dependency versions](https://docs.gradle.org/current/userguide/depe
 
 ```bash
 ./gradlew osvScan
+```
+
+### Scanning an SBOM
+You can use the `osvSbom` task to initiate a vulnerability scan on a specific SBOM file as specified by the `sbom` configuration item. 
+
+```bash
+./gradlew osvSbom
 ```
 
 ### Experimental licences summary
@@ -99,6 +107,7 @@ The plugin supports a limited number of configurable settings that affect it's b
 | flags | string `""` | Any flags to pass through to osv-scanner |
 | binary | string `""` | Optional specify the location of a pre-installed `osv-scanner` binary. If specified this will be used instead of a downloaded version using `osvInstall` |
 | licences | string `""` | Comma-separated list of valid [SPDX](https://spdx.org/licenses/) licence identifiers | 
+| sbom | string `""` | Path to the SBOM file to scan |
 
 The following is an example configuration overriding the default version, format, passing through a flag and overriding the installation location of osv-scanner.
 

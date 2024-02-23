@@ -15,5 +15,6 @@ public class OSVScannerPlugin implements Plugin<Project> {
 		OSVScannerScanTask.register(project)
 		OSVScannerLicencesTask.register(project)
 		OSVScannerLicencesSummaryTask.register(project)
+		OSVScannerSbomTask.register(project)
 	}
 }
