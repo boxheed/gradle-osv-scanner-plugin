@@ -12,14 +12,14 @@ import org.kohsuke.github.*
 import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
 import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerRunnerTaskHelper.*
 
-public class OSVScannerScanTask extends DefaultTask {
+public class OSVScannerLicencesTask extends DefaultTask {
 
-    public static final String NAME = "osvScan"
+    public static final String NAME = "osvExperimentalLicences"
 
     private Project project
 
     @Inject
-    public OSVScannerScanTask(Project project) {
+    public OSVScannerLicencesTask(Project project) {
         this.project = project
     }
 
@@ -28,10 +28,10 @@ public class OSVScannerScanTask extends DefaultTask {
         def taskContainer = project.getTasks()
 
         taskContainer.create([name: NAME,
-            type: OSVScannerScanTask,
+            type: OSVScannerLicencesTask,
             dependsOn: [],
             group: OSVScannerPlugin.GROUP,
-            description: 'Runs osv-scanner on your project'])
+            description: 'Runs osv-scanner with --experimental-licences on your project'])
     }
 
     @TaskAction
@@ -42,10 +42,10 @@ public class OSVScannerScanTask extends DefaultTask {
         context.project = project
         context.extension = extension
         context.executable = getExecutable(context)
-        context.mode = "scan"
+        context.mode = "exp-lic"
         context.flags = getFlags(context)
         context.cmd = createCommand(context)
-        context.failureMsg = "Vulnerabilities found."
+        context.failureMsg = "Licence violations found."
         context.report = getReportFile(context)
         runCommand(context)
     }
@@ -58,9 +58,10 @@ public class OSVScannerScanTask extends DefaultTask {
         commandParts.add("--format")
         commandParts.add(extension.format)
         commandParts.add(context.flags)
-        commandParts.add("--recursive")
+        commandParts.add("--experimental-licenses=" + extension.licences)
         commandParts.add(context.project.projectDir)
-        return commandParts.join(" ")
+        def command = commandParts.join(" ")
+        return command
     }
         
 

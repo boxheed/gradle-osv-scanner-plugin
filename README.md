@@ -57,6 +57,20 @@ See [Locking dependency versions](https://docs.gradle.org/current/userguide/depe
 ./gradlew osvScan
 ```
 
+### Experimental licence checking
+Runs `osv-scanner` with the experimental licence flag `--experimental-licenses`. If you are using this flag then you must set
+valid [SPDX](https://spdx.org/licenses/) licence identifiers as a comma-separated string with the `licences` value of the configuration. The scan will write out a report in the `build/osv-scanner/` directory called `osv-scanner-exp-lic` with the appropriate extension for the format. 
+
+```bash
+./gradlew osvExperimentalLicences
+```
+
+```
+osvScanner {
+    licences "BSD-3-Clause,Apache-2.0,MIT"
+}
+```
+
 ### Configuration
 The plugin supports a limited number of configurable settings that affect it's behaviour.
 
@@ -70,6 +84,7 @@ The plugin supports a limited number of configurable settings that affect it's b
 | format | `table`, `json`, `markdown`, `sarif`, `gh-annotations` | The format for the ouput report, defaults to `json` |
 | flags | string `""` | Any flags to pass through to osv-scanner |
 | binary | string `""` | Optional specify the location of a pre-installed `osv-scanner` binary. If specified this will be used instead of a downloaded version using `osvInstall` |
+| licences | string `""` | Comma-separated list of valid [SPDX](https://spdx.org/licenses/) licence identifiers | 
 
 The following is an example configuration overriding the default version, format, passing through a flag and overriding the installation location of osv-scanner.
 
