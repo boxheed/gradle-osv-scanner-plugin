@@ -37,7 +37,14 @@ buildscript {
 apply plugin: 'com.fizzpod.osv-scanner'
 ```
 
-## Usage
+## Tasks
+
+| Task | Description | Osv Scanner Flag |
+|------|-------------|----------|
+| `osvInstall` | Installs appropriate version of osv-scanner | |
+| `osvScan` | Scans the repository | `--recursive` |
+| `osvExperimentalLicencesSummary` | Runs the licence summary | `--experimental-licences-summary` | 
+| `osvExperimentalLicences` | Runs the licence check with the list of licences defined in the `licence` setting | `--experimental-licences` | 
 
 ### Installation of osv-scanner
 You can use the `osvInstall` task to download and install osv-scanner. By default, this will install the latest version of osv-scanner in the `build/osv-scanner` folder.
@@ -57,7 +64,14 @@ See [Locking dependency versions](https://docs.gradle.org/current/userguide/depe
 ./gradlew osvScan
 ```
 
-### Experimental licence checking
+### Experimental licences summary
+Runs `osv-scanner` with the experimental licence flag `--experimental-licenses-summary`. The scan will write out a report in the `build/osv-scanner/` directory called `osv-scanner-exp-lic-sum` with the appropriate extension for the format. 
+
+```bash
+./gradlew osvExperimentalLicencesSummary
+```
+
+### Experimental licences checking
 Runs `osv-scanner` with the experimental licence flag `--experimental-licenses`. If you are using this flag then you must set
 valid [SPDX](https://spdx.org/licenses/) licence identifiers as a comma-separated string with the `licences` value of the configuration. The scan will write out a report in the `build/osv-scanner/` directory called `osv-scanner-exp-lic` with the appropriate extension for the format. 
 
