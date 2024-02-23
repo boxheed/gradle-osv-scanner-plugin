@@ -10,4 +10,5 @@ public class OSVScannerPluginExtension {
     def format = "json"
     def flags = ""
     def binary = ""
+    def licences = ""
 }
