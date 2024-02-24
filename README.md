@@ -43,9 +43,10 @@ apply plugin: 'com.fizzpod.osv-scanner'
 |------|-------------|------------------|
 | `osvInstall` | Installs appropriate version of osv-scanner | |
 | `osvScan` | Scans the repository | `--recursive` |
+| `osvSbom` | Runs a scan on an SBOM file as specified in the `sbom` configuration | `--sbom` |
+| `osvLockfiles` | Runs a scan on the lockfiles specified in the `lockfiles` configuration | `--lockfile` |
 | `osvExperimentalLicencesSummary` | Runs the licence summary | `--experimental-licences-summary` | 
 | `osvExperimentalLicences` | Runs the licence check with the list of licences defined in the `licence` setting | `--experimental-licences` | 
-| `osvSbom` | Runs a scan on an SBOM file | `--sbom` |
 
 ### Installation of osv-scanner
 You can use the `osvInstall` task to download and install osv-scanner. By default, this will install the latest version of osv-scanner in the `build/osv-scanner` folder.
@@ -71,6 +72,36 @@ You can use the `osvSbom` task to initiate a vulnerability scan on a specific SB
 ```bash
 ./gradlew osvSbom
 ```
+
+### Scanning lockfiles
+You can use the `osvLockfile` task to initiate a vulnerability scan on a specific lockfile or multiple lockfiles file as specified by the `lockfiles` configuration item. The `lockfiles` is an array of lockfiles, or
+a closure which will return an array of lockfiles. It is initialised with an array so you can just append
+the lockfile onto the existing array.
+
+```bash
+./gradlew osvSbom
+```
+
+```
+osvScanner {
+    lockfiles = ["/myproject/gradle.lockfile"]
+}
+```
+
+```
+osvScanner {
+    lockfiles += "/myproject/gradle.lockfile"
+}
+```
+
+```
+osvScanner {
+    lockfiles = {
+        ["/myproject/gradle.lockfile"]
+    }
+}
+```
+
 
 ### Experimental licences summary
 Runs `osv-scanner` with the experimental licence flag `--experimental-licenses-summary`. The scan will write out a report in the `build/osv-scanner/` directory called `osv-scanner-exp-lic-sum` with the appropriate extension for the format. 
@@ -108,6 +139,7 @@ The plugin supports a limited number of configurable settings that affect it's b
 | binary | string `""` | Optional specify the location of a pre-installed `osv-scanner` binary. If specified this will be used instead of a downloaded version using `osvInstall` |
 | licences | string `""` | Comma-separated list of valid [SPDX](https://spdx.org/licenses/) licence identifiers | 
 | sbom | string `""` | Path to the SBOM file to scan |
+| lockfiles | array [] | An array of paths to the lockfiles to scan, or a closure that resolves to an array |
 
 The following is an example configuration overriding the default version, format, passing through a flag and overriding the installation location of osv-scanner.
 

@@ -12,4 +12,5 @@ public class OSVScannerPluginExtension {
     def binary = ""
     def licences = ""
     def sbom = ""
+    def lockfiles = []
 }
