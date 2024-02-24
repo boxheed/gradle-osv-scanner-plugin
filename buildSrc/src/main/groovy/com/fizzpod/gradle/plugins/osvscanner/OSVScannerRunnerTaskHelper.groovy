@@ -13,16 +13,6 @@ import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
 
 public class OSVScannerRunnerTaskHelper extends DefaultTask {
 
-    /*
-    static def getMode(def context) {
-        def mode = context.extension.mode
-        switch(mode) {
-            case "experimental-licenses": break
-            default: mode = "recursive"
-        }
-        return mode
-    }*/
-
     static def getReportFile(def context) {
         def extension = context.extension
         def mode = context.mode
@@ -42,6 +32,8 @@ public class OSVScannerRunnerTaskHelper extends DefaultTask {
     }
 
     static def getExecutable(def context) {
+        context.os = getOs(context)
+        context.arch = getArch(context)
         def binary = getBinaryFromConfig(context)
         if(!binary.exists()) {
             throw new RuntimeException("Cannot find osv-scanner binary on path " + binary)

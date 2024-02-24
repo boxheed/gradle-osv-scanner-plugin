@@ -88,7 +88,7 @@ public class OSVScannerInstallTask extends DefaultTask {
         def version = release.getName()
 
         def osvInstallLocation = new File(osvInstallRoot, ".cache/" + version)
-        def osvFileName = getBinaryName(context)
+        def osvFileName = getBinaryName(context.os, context.arch)
         def osvFile = new File(osvInstallLocation, osvFileName)
         return osvFile
     }
