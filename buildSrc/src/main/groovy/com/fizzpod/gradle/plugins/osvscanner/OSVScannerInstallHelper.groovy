@@ -26,16 +26,16 @@ public class OSVScannerHelper {
         return new File(root, OSV_INSTALL_DIR)
     }
 
-    static def getBinaryName(def context) {
-        def name = "osv-scanner_" + getOs(context) + "_" + getArch(context)
-        if(WINDOWS.equals(getOs(context))) {
+    static def getBinaryName(def os, def arch) {
+        def name = "osv-scanner_" + os + "_" + arch
+        if(WINDOWS.equals(os)) {
             name = name + ".exe"
         }
         return name
     }
     
     static def getBinaryFile(def context) {
-        return new File(getInstallRoot(context), getBinaryName(context))
+        return new File(getInstallRoot(context), getBinaryName(context.os, context.arch))
     }
 
     static def getBinaryFromConfig(def context) {
