@@ -41,7 +41,8 @@ apply plugin: 'com.fizzpod.osv-scanner'
 
 | Task | Description | Osv Scanner Flag |
 |------|-------------|------------------|
-| `osvInstall` | Installs appropriate version of osv-scanner | |
+| `osvInstall` | Installs appropriate version of osv-scanner based on the `os` and `arch` settings | |
+| `osvInstallAll` | Installs all versions of osv-scanner allowing commiting of the binaries to the repository | |
 | `osvScan` | Scans the repository | `--recursive` |
 | `osvSbom` | Runs a scan on an SBOM file as specified in the `sbom` configuration | `--sbom` |
 | `osvLockfiles` | Runs a scan on the lockfiles specified in the `lockfiles` configuration | `--lockfile` |
@@ -60,11 +61,13 @@ Installation of a binary is within the `.osv-scanner` directory. The binaries ar
 
 ### Running a scan
 You can use the `osvScan` task to initiate a vulnerability scan. By default, the scan will analyze all dependencies declared in your project, however note that for gradle projects you need to create lock files. 
-See [Locking dependency versions](https://docs.gradle.org/current/userguide/dependency_locking.html) in the Gradle documentation
+See [Locking dependency versions](https://docs.gradle.org/current/userguide/dependency_locking.html) in the Gradle documentation. 
 
 ```bash
 ./gradlew osvScan
 ```
+
+The plugin supports 3 failure modes on the results of the scan. Note that this is only supported of the `format` is `json`. To configure the failure mode see `failOn` and `failOnThreshold`
 
 ### Scanning an SBOM
 You can use the `osvSbom` task to initiate a vulnerability scan on a specific SBOM file as specified by the `sbom` configuration item. 
@@ -74,12 +77,12 @@ You can use the `osvSbom` task to initiate a vulnerability scan on a specific SB
 ```
 
 ### Scanning lockfiles
-You can use the `osvLockfile` task to initiate a vulnerability scan on a specific lockfile or multiple lockfiles file as specified by the `lockfiles` configuration item. The `lockfiles` is an array of lockfiles, or
+You can use the `osvLockfile` task to initiate a vulnerability scan on a specific lockfile or multiple lockfile files as specified by the `lockfiles` configuration item. The `lockfiles` is an array of lockfiles, or
 a closure which will return an array of lockfiles. It is initialised with an array so you can just append
-the lockfile onto the existing array.
+the lockfile onto the existing array. 
 
 ```bash
-./gradlew osvSbom
+./gradlew osvLockfile
 ```
 
 ```
@@ -129,26 +132,31 @@ The plugin supports a limited number of configurable settings that affect it's b
 
 | name | values | description |
 |------|--------|-------------|
-| version | default: `latest` | The version of osv-scanner to use, defaults to `latest` if not specified |
-| repository | default: `"google/osv-scanner"` | The GitHub repository to use to download the binary |
-| os | `windows`, `linux`, `darwin` | The operating system for the binary, `darwin` represents Apple Macs. Defaults to detecting the os from the environment |
-| arch | `amd64`, `arm64` | The CPU architecture for the binary. Defaults to detecting the CPU architecture from the environment |
-| mode | `recursive` | Currently this is the only mode supported |
-| format | `table`, `json`, `markdown`, `sarif`, `gh-annotations` | The format for the ouput report, defaults to `json` |
-| flags | string `""` | Any flags to pass through to osv-scanner |
-| binary | string `""` | Optional specify the location of a pre-installed `osv-scanner` binary. If specified this will be used instead of a downloaded version using `osvInstall` |
-| licences | string `""` | Comma-separated list of valid [SPDX](https://spdx.org/licenses/) licence identifiers | 
-| sbom | string `""` | Path to the SBOM file to scan |
-| lockfiles | array [] | An array of paths to the lockfiles to scan, or a closure that resolves to an array |
+| `version` | default: `latest` | The version of osv-scanner to use, defaults to `latest` if not specified |
+| `repository` | default: `"google/osv-scanner"` | The GitHub repository to use to download the binary |
+| `os` | `windows`, `linux`, `darwin` | The operating system for the binary, `darwin` represents Apple Macs. Defaults to detecting the os from the environment |
+| `arch` | `amd64`, `arm64` | The CPU architecture for the binary. Defaults to detecting the CPU architecture from the environment |
+| `mode` | `recursive` | Currently this is the only mode supported |
+| `format` | `table`, `json`, `markdown`, `sarif`, `gh-annotations` | The format for the ouput report, defaults to `json` |
+| `flags` | string `""` | Any flags to pass through to osv-scanner |
+| `binary` | string `""` | Optional specify the location of a pre-installed `osv-scanner` binary. If specified this will be used instead of a downloaded version using `osvInstall` |
+| `licences` | string `""` | Comma-separated list of valid [SPDX](https://spdx.org/licenses/) licence identifiers | 
+| `sbom` | string `""` | Path to the SBOM file to scan |
+| `lockfiles` | array [] | An array of paths to the lockfiles to scan, or a closure that resolves to an array |
+| `failOn` | one of `exit` `count` or `score` default: `exit` | `exit` faios on a non zero exit value from `osv-scanner`, `count` fails on the number of vulnerabilities found, `score` fails on the maximum cvss score found |
+| `failOnThreshold` | decimal number, default `0` | The threshold number to apply for the `failOn` if `count` or `score` is specified |
+
 
 The following is an example configuration overriding the default version, format, passing through a flag and overriding the installation location of osv-scanner.
 
 ```
 osvScanner {
-    version "v1.6.1"
-    format = "table"
+    version = "v1.6.1"
+    format = "json"
     flags = "--no-ignore"
     binary = "/tmp/osv-scanner"
+    failOn = "score"
+    failOnThreshold = 7.0
 }
 ```
 

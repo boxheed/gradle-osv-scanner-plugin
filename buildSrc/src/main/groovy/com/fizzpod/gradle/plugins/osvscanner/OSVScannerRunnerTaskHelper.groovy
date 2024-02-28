@@ -8,10 +8,15 @@ import javax.inject.Inject
 import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.io.FileUtils
 import org.kohsuke.github.*
+import groovy.json.JsonSlurper
+import com.jayway.jsonpath.*
+import us.springett.cvss.*
 
 import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
 
-public class OSVScannerRunnerTaskHelper extends DefaultTask {
+public class OSVScannerRunnerTaskHelper {
+
+    private JsonSlurper jsonSlurper = new JsonSlurper()
 
     static def getReportFile(def context) {
         def extension = context.extension
@@ -57,14 +62,61 @@ public class OSVScannerRunnerTaskHelper extends DefaultTask {
         context.report.getParentFile().mkdirs()
         context.report.write(sout.toString())
         context.logger.lifecycle("Output written to " + context.report)
-        //TODO this behaviour may need customising
-        if(exitValue > 0 && exitValue < 127) {
-            throw new RuntimeException(context.failureMsg + " Exit: " + exitValue)
-        }
         if(exitValue >= 127) {
             throw new RuntimeException("An error has occured running osv-scanner. Exit: " + exitValue)
         }
+        failOn(exitValue, sout.toString(), context)
         return
+    }
+
+    static def failOn(def exitValue, def output, def context) {
+        def extension = context.extension
+        if(!"json".equals(extension.format) && !"exit".equals(extension.failOn)) {
+            context.logger.warn("Only json format is supported for failOn. Ignoring failOn: " + extension.failOn)
+            extension.failOn = "exit"
+        }
+        switch(extension.failOn) {
+            case "count": failOnCount(exitValue, output, context); break;
+            case "score": failOnScore(exitValue, output, context); break;
+            default: failOnExit(exitValue, output, context); break;
+        }
+    }
+
+    static def failOnCount(def exitValue, def output, def context) {
+        def vulns = JsonPath.parse(output).read('$.results[*].packages[*].vulnerabilities[*]');
+        def vulnCount = vulns.size()
+        def threshold = context.extension.failOnThreshhold
+        if(vulnCount >= threshold) {
+            throw new RuntimeException("Vulnerabilities found; number found ($vulnCount) exceeds threshold ($threshold).");
+        }
+    }
+
+    static def failOnScore(def exitValue, def output, def context) {
+        def severities = JsonPath.parse(output).read('$.results[*].packages[*].vulnerabilities[*].severity[*]');
+        def cvssScore = 0
+        def threshold = context.extension.failOnThreshhold
+        severities.each { item -> 
+            def score = Cvss.fromVector(item.score).calculateScore().getBaseScore();
+            switch(item.type) {
+                case "CVSS_V2": cvssScore = cvssScore < score? score: cvssScore; break;
+                default: cvssScore = cvssScore < score? score: cvssScore; break;
+            }
+        }
+
+        if(cvssScore != 0) {
+            context.logger.lifecycle("Vulnerabilities found; max score ($cvssScore)")
+        } else {
+            context.logger.lifecycle("No vulnerabilities found")
+        }
+        if(cvssScore > threshold) {
+            throw new RuntimeException("Vulnerabilities found; max score ($cvssScore) exceeds threshold ($threshold).");
+        }
+    }
+
+    static def failOnExit(def exitValue, def output, def context) {
+        if(exitValue > 0 && exitValue < 127) {
+            throw new RuntimeException(context.failureMsg + " Exit: " + exitValue)
+        }
     }
 
 }
