@@ -13,4 +13,6 @@ public class OSVScannerPluginExtension {
     def licences = ""
     def sbom = ""
     def lockfiles = []
+    def failOn = "exit"
+    def failOnThreshold = 0
 }
