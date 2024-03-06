@@ -85,7 +85,7 @@ public class OSVScannerRunnerTaskHelper {
     static def failOnCount(def exitValue, def output, def context) {
         def vulns = JsonPath.parse(output).read('$.results[*].packages[*].vulnerabilities[*]');
         def vulnCount = vulns.size()
-        def threshold = context.extension.failOnThreshhold
+        def threshold = context.extension.failOnThreshold
         if(vulnCount >= threshold) {
             throw new RuntimeException("Vulnerabilities found; number found ($vulnCount) exceeds threshold ($threshold).");
         }
@@ -94,7 +94,7 @@ public class OSVScannerRunnerTaskHelper {
     static def failOnScore(def exitValue, def output, def context) {
         def severities = JsonPath.parse(output).read('$.results[*].packages[*].vulnerabilities[*].severity[*]');
         def cvssScore = 0
-        def threshold = context.extension.failOnThreshhold
+        def threshold = context.extension.failOnThreshold
         severities.each { item -> 
             def score = Cvss.fromVector(item.score).calculateScore().getBaseScore();
             switch(item.type) {
