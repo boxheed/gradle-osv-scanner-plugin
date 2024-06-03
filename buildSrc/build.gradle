@@ -7,7 +7,7 @@ dependencies {
   implementation 'org.kohsuke:github-api:1.321'
   implementation 'commons-io:commons-io:2.16.1'
   implementation 'com.jayway.jsonpath:json-path:2.9.0'
-  implementation 'us.springett:cvss-calculator:1.4.2'
+  implementation 'us.springett:cvss-calculator:1.4.3'
   
 	testImplementation('com.netflix.nebula:nebula-test:10.6.1') {
         exclude group: 'org.codehaus.groovy'
