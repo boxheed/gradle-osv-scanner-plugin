@@ -6,3 +6,6 @@ bin
 .settings
 .vscode
 .osv-scanner
+.LCKbuild.gradle~
+.osv-scanner
+.git-semver
