@@ -1,15 +1,17 @@
+/* (C) 2024 */
+/* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
-import org.gradle.api.Project
-import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.TaskAction
+import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
+
 import groovy.json.*
 import javax.inject.Inject
-import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.SystemUtils
+import org.gradle.api.DefaultTask
+import org.gradle.api.Project
+import org.gradle.api.tasks.TaskAction
 import org.kohsuke.github.*
-
-import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
 
 public class OSVScannerInstallTask extends DefaultTask {
 
@@ -95,17 +97,17 @@ public class OSVScannerInstallTask extends DefaultTask {
 
     def getRelease(def context) {
         def extension = context.extension
-        GitHub github = GitHub.connectAnonymously();
-        GHRepository osvScannerRepository = github.getRepository(extension.repository);
-        GHRelease osvRelease = osvScannerRepository.getLatestRelease();
+        GitHub github = GitHub.connectAnonymously()
+        GHRepository osvScannerRepository = github.getRepository(extension.repository)
+        GHRelease osvRelease = osvScannerRepository.getLatestRelease()
         //match against requeired release
         if(!"latest".equalsIgnoreCase(extension.version)) {
-            Iterable<GHRelease> osvReleases = osvScannerRepository.listReleases();
+            Iterable<GHRelease> osvReleases = osvScannerRepository.listReleases()
             osvReleases.forEach(release -> {
                 if(extension.version.equalsIgnoreCase(release.getName())) {
                     osvRelease = release
                 }
-            });
+            })
         }
         context.logger.info("osv-scanner version resolved to {}", osvRelease.getName())
         return osvRelease
@@ -116,13 +118,13 @@ public class OSVScannerInstallTask extends DefaultTask {
         def os = context.os
         def arch = context.arch
         //Find the appropriate binary asset
-        Iterable<GHAsset> assets = release.listAssets();
+        Iterable<GHAsset> assets = release.listAssets()
         //find the appropriate asset
-        GHAsset osvAsset = null;
+        GHAsset osvAsset = null
         assets.forEach( asset -> {
             String assetName = asset.getName()
             if(assetName.contains(os) && assetName.contains(arch)) {
-                osvAsset = asset;
+                osvAsset = asset
             }
         })
         if(osvAsset == null) {

@@ -1,15 +1,16 @@
+/* (C) 2024 */
+/* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
-import org.gradle.api.Project
-import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.TaskAction
+import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
+
 import groovy.json.*
 import javax.inject.Inject
-import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.io.FileUtils
-import org.kohsuke.github.*
-
-import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
+import org.apache.commons.lang3.SystemUtils
+import org.gradle.api.DefaultTask
+import org.gradle.api.Project
+import org.gradle.api.tasks.TaskAction
 
 public class OSVScannerInstallAllTask extends OSVScannerInstallTask {
 
@@ -19,8 +20,8 @@ public class OSVScannerInstallAllTask extends OSVScannerInstallTask {
     private def oses = [OSVScannerHelper.LINUX, OSVScannerHelper.MAC, OSVScannerHelper.WINDOWS] 
     private def arches = [OSVScannerHelper.AMD64, OSVScannerHelper.ARM64] 
 
-    private def currentOs;
-    private def currentArch;
+    private def currentOs
+    private def currentArch
 
     @Inject
     public OSVScannerInstallAllTask(Project project) {

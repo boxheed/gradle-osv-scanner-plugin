@@ -1,3 +1,5 @@
+/* (C) 2024 */
+/* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
 import org.gradle.api.Plugin
@@ -18,5 +20,8 @@ public class OSVScannerPlugin implements Plugin<Project> {
 		OSVScannerLicencesSummaryTask.register(project)
 		OSVScannerSbomTask.register(project)
 		OSVScannerLockfileTask.register(project)
+		OSVScannerWriteLockfilesTask.register(project)
+		OSVScannerDeleteLockfilesTask.register(project)
+		OSVScannerLockAndScanTask.register(project)
 	}
 }

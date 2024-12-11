@@ -1,18 +1,20 @@
+/* (C) 2024 */
+/* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
-import org.gradle.api.Project
-import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.TaskAction
-import groovy.json.*
-import javax.inject.Inject
-import org.apache.commons.lang3.SystemUtils
-import org.apache.commons.io.FileUtils
-import org.kohsuke.github.*
-import groovy.json.JsonSlurper
-import com.jayway.jsonpath.*
-import us.springett.cvss.*
-
 import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
+
+import com.jayway.jsonpath.*
+import groovy.json.*
+import groovy.json.JsonSlurper
+import javax.inject.Inject
+import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.SystemUtils
+import org.gradle.api.DefaultTask
+import org.gradle.api.Project
+import org.gradle.api.tasks.TaskAction
+import org.kohsuke.github.*
+import us.springett.cvss.*
 
 public class OSVScannerRunnerTaskHelper {
 
@@ -26,11 +28,11 @@ public class OSVScannerRunnerTaskHelper {
         def format = extension.format
         def suffix = format
         switch(format) {
-            case 'json': suffix = "json"; break;
-            case 'table': suffix = "txt"; break;
-            case 'markdown': suffix = "md"; break;
-            case 'sarif': suffix = "sarif"; break;
-            default: suffix = "txt";
+            case 'json': suffix = "json"; break
+            case 'table': suffix = "txt"; break
+            case 'markdown': suffix = "md"; break
+            case 'sarif': suffix = "sarif"; break
+            default: suffix = "txt"
         }
         def reportFile = new File(reportFolder, OSVScannerPlugin.EXE_NAME +"-" + mode + "." + suffix)
         return reportFile
@@ -76,30 +78,30 @@ public class OSVScannerRunnerTaskHelper {
             extension.failOn = "exit"
         }
         switch(extension.failOn) {
-            case "count": failOnCount(exitValue, output, context); break;
-            case "score": failOnScore(exitValue, output, context); break;
-            default: failOnExit(exitValue, output, context); break;
+            case "count": failOnCount(exitValue, output, context); break
+            case "score": failOnScore(exitValue, output, context); break
+            default: failOnExit(exitValue, output, context); break
         }
     }
 
     static def failOnCount(def exitValue, def output, def context) {
-        def vulns = JsonPath.parse(output).read('$.results[*].packages[*].vulnerabilities[*]');
+        def vulns = JsonPath.parse(output).read('$.results[*].packages[*].vulnerabilities[*]')
         def vulnCount = vulns.size()
         def threshold = context.extension.failOnThreshold
         if(vulnCount >= threshold) {
-            throw new RuntimeException("Vulnerabilities found; number found ($vulnCount) exceeds threshold ($threshold).");
+            throw new RuntimeException("Vulnerabilities found; number found ($vulnCount) exceeds threshold ($threshold).")
         }
     }
 
     static def failOnScore(def exitValue, def output, def context) {
-        def severities = JsonPath.parse(output).read('$.results[*].packages[*].vulnerabilities[*].severity[*]');
+        def severities = JsonPath.parse(output).read('$.results[*].packages[*].vulnerabilities[*].severity[*]')
         def cvssScore = 0
         def threshold = context.extension.failOnThreshold
         severities.each { item -> 
-            def score = Cvss.fromVector(item.score).calculateScore().getBaseScore();
+            def score = Cvss.fromVector(item.score).calculateScore().getBaseScore()
             switch(item.type) {
-                case "CVSS_V2": cvssScore = cvssScore < score? score: cvssScore; break;
-                default: cvssScore = cvssScore < score? score: cvssScore; break;
+                case "CVSS_V2": cvssScore = cvssScore < score? score: cvssScore; break
+                default: cvssScore = cvssScore < score? score: cvssScore; break
             }
         }
 
@@ -109,7 +111,7 @@ public class OSVScannerRunnerTaskHelper {
             context.logger.lifecycle("No vulnerabilities found")
         }
         if(cvssScore > threshold) {
-            throw new RuntimeException("Vulnerabilities found; max score ($cvssScore) exceeds threshold ($threshold).");
+            throw new RuntimeException("Vulnerabilities found; max score ($cvssScore) exceeds threshold ($threshold).")
         }
     }
 
