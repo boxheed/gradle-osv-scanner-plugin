@@ -44,10 +44,13 @@ apply plugin: 'com.fizzpod.osv-scanner'
 | `osvInstall`                     | Installs appropriate version of osv-scanner based on the `os` and `arch` settings         |                                   |
 | `osvInstallAll`                  | Installs all versions of osv-scanner allowing commiting of the binaries to the repository |                                   |
 | `osvScan`                        | Scans the repository                                                                      | `--recursive`                     |
+| `osvLockAndScan`                 | Creates the lockfiles, runs the scan as per `osvScan` and then deletes the lockfiles.     | `--recursive`                     |
 | `osvSbom`                        | Runs a scan on an SBOM file as specified in the `sbom` configuration                      | `--sbom`                          |
 | `osvLockfiles`                   | Runs a scan on the lockfiles specified in the `lockfiles` configuration                   | `--lockfile`                      |
 | `osvExperimentalLicencesSummary` | Runs the licence summary                                                                  | `--experimental-licences-summary` |
 | `osvExperimentalLicences`        | Runs the licence check with the list of licences defined in the `licence` setting         | `--experimental-licences`         |
+| `writeLockfiles`                 | Generates the lockfiles                                                                   |                                   |
+| `deleteLockfiles`                | Deletes all lockfiles in the project tree                                                 |                                   |
 
 ### Installation of osv-scanner
 
