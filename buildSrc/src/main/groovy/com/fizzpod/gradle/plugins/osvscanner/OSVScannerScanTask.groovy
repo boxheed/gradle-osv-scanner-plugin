@@ -1,16 +1,18 @@
+/* (C) 2024 */
+/* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
-
-import org.gradle.api.Project
-import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.TaskAction
-import groovy.json.*
-import javax.inject.Inject
-import org.apache.commons.lang3.SystemUtils
-import org.apache.commons.io.FileUtils
-import org.kohsuke.github.*
 
 import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
 import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerRunnerTaskHelper.*
+
+import groovy.json.*
+import javax.inject.Inject
+import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.SystemUtils
+import org.gradle.api.DefaultTask
+import org.gradle.api.Project
+import org.gradle.api.tasks.TaskAction
+import org.kohsuke.github.*
 
 public class OSVScannerScanTask extends DefaultTask {
 
