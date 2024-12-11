@@ -11,7 +11,6 @@ import org.apache.commons.lang3.SystemUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
-import org.kohsuke.github.*
 
 public class OSVScannerInstallAllTask extends OSVScannerInstallTask {
 

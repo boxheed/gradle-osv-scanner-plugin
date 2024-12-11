@@ -38,6 +38,10 @@ public class OSVScannerScanTask extends DefaultTask {
 
     @TaskAction
     def runTask() {
+        OSVScannerScanTask.run(this.project)
+    }
+
+    static def run = { project ->
         def extension = project[OSVScannerPlugin.NAME]
         def context = [:]
         context.logger = project.getLogger()
@@ -52,7 +56,7 @@ public class OSVScannerScanTask extends DefaultTask {
         runCommand(context)
     }
 
-    def createCommand(def context) {
+    static def createCommand(def context) {
         def extension = context.extension
         def mode = context.mode
         def commandParts = []
