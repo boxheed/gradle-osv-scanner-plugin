@@ -12,4 +12,13 @@ dependencies {
 	testImplementation('com.netflix.nebula:nebula-test:10.6.2') {
     exclude group: 'org.codehaus.groovy'
   }
+
+  constraints {
+    implementation('net.minidev:json-smart') {
+      because 'version 2.5.0 imported as a dependency has a vulnerability'
+      version {
+          require '2.5.2'
+      }
+    }
+  }
 }
