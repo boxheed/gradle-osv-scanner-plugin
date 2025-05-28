@@ -9,15 +9,14 @@ buildscript {
     }
   }
   dependencies {
-    classpath ('com.fizzpod:gradle-plugin-opinion:22.1.2') {
+    classpath ('com.fizzpod:gradle-plugin-opinion:23.0.2') {
       exclude group: 'com.fizzpod', module: 'gradle-osv-scanner-plugin'
     }
-    classpath 'com.fizzpod:gradle-pater-build-plugin:3.2.1'
+    classpath 'com.fizzpod:gradle-pater-build-plugin:3.2.2'
   }
 }
 
 apply plugin: 'com.fizzpod.pater-build'
-apply plugin: 'com.fizzpod.osv-scanner'
 apply from: './buildSrc/build.gradle'
 
 sourceSets {
@@ -65,4 +64,8 @@ gradlePlugin {
       implementationClass = 'com.fizzpod.gradle.plugins.osvscanner.OSVScannerPlugin'
     }
   }
+}
+
+lefthook {
+  version "v1.11.13"
 }

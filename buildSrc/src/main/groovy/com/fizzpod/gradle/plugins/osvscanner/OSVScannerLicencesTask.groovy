@@ -1,4 +1,4 @@
-/* (C) 2024 */
+/* (C) 2024-2025 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -16,7 +16,7 @@ import org.kohsuke.github.*
 
 public class OSVScannerLicencesTask extends DefaultTask {
 
-    public static final String NAME = "osvExperimentalLicences"
+    public static final String NAME = "osvLicences"
 
     private Project project
 
@@ -40,6 +40,7 @@ public class OSVScannerLicencesTask extends DefaultTask {
     def runTask() {
         def extension = project[OSVScannerPlugin.NAME]
         def context = [:]
+        context.version = OSVScannerInstallTask.getInstalledVersion(project)
         context.logger = project.getLogger()
         context.project = project
         context.extension = extension
@@ -60,7 +61,11 @@ public class OSVScannerLicencesTask extends DefaultTask {
         commandParts.add("--format")
         commandParts.add(extension.format)
         commandParts.add(context.flags)
-        commandParts.add("--experimental-licenses=" + extension.licences)
+        if ( context.version.startsWith("v1")) {
+            commandParts.add("--experimental-licenses=" + extension.licences)
+        } else {
+            commandParts.add("-licenses=" + extension.licences)
+        }
         commandParts.add(context.project.projectDir)
         def command = commandParts.join(" ")
         return command

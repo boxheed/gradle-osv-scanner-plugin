@@ -1,4 +1,4 @@
-/* (C) 2024 */
+/* (C) 2024-2025 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -25,6 +25,8 @@ public class OSVScannerInstallTask extends DefaultTask {
     public static final String ARM64 = "arm64"
 
     public static final String OSV_INSTALL_DIR = ".osv-scanner"
+
+    public static final String OSV_VERSION_FILE = "osv-scanner.version"
 
     private Project project
 
@@ -62,9 +64,9 @@ public class OSVScannerInstallTask extends DefaultTask {
 
     def install(def context) {
         def version = context.release.getName()
-        def installFolder = getInstallRoot(context)
+        def installFolder = getInstallRoot(context.project)
         def osvFile = new File(installFolder, context.location.getName())
-        def versionFile = new File(installFolder, 'osv-scanner.version')
+        def versionFile = new File(installFolder, OSV_VERSION_FILE)
         def contents = ""
         if(versionFile.exists()) {
             contents = versionFile.getText()
@@ -76,9 +78,20 @@ public class OSVScannerInstallTask extends DefaultTask {
         osvFile.setExecutable(true)
         versionFile.write(context.release.getName())
     }
-    def getInstallRoot(def context) {
-        def root = context.project.rootDir
+
+    def getInstallRoot(def project) {
+        def root = project.rootDir
         return new File(root, OSV_INSTALL_DIR)
+    }
+
+    static def getInstalledVersion(def project) {
+        def installFolder = getInstallRoot(project)
+        def versionFile = new File(installFolder, OSV_VERSION_FILE)
+        def version = "v2"
+        if(versionFile.exists()) {
+            version = versionFile.getText()
+        }
+        return version
     }
 
 //TODO Think about using a .cache directory and downloading binaries for all OS and ARCH
