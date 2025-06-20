@@ -64,7 +64,3 @@ gradlePlugin {
     }
   }
 }
-
-lefthook {
-  version "v1.11.13"
-}
