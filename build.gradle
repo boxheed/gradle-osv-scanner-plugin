@@ -12,7 +12,6 @@ buildscript {
     classpath ('com.fizzpod:gradle-plugin-opinion:23.0.2') {
       exclude group: 'com.fizzpod', module: 'gradle-osv-scanner-plugin'
     }
-    classpath 'com.fizzpod:gradle-pater-build-plugin:3.2.4'
   }
 }
 
