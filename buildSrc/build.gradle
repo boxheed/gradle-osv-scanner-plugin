@@ -4,7 +4,7 @@ repositories {
 
 dependencies {
 
-  implementation 'org.kohsuke:github-api:1.329'
+  implementation 'org.kohsuke:github-api:1.330'
   implementation 'commons-io:commons-io:2.20.0'
   implementation 'com.jayway.jsonpath:json-path:2.9.0'
   implementation 'us.springett:cvss-calculator:1.4.3'
