@@ -4,12 +4,12 @@ repositories {
 
 dependencies {
 
-  implementation 'org.kohsuke:github-api:1.329'
+  implementation 'org.kohsuke:github-api:1.330'
   implementation 'commons-io:commons-io:2.20.0'
   implementation 'com.jayway.jsonpath:json-path:2.9.0'
   implementation 'us.springett:cvss-calculator:1.4.3'
 
-  testImplementation('com.netflix.nebula:nebula-test:11.1.5') 
+  testImplementation('com.netflix.nebula:nebula-test:11.2.0') 
   testImplementation('org.spockframework:spock-core:2.3-groovy-4.0')
   testImplementation("org.spockframework:spock-junit4:2.3-groovy-4.0")
   testImplementation("org.junit.vintage:junit-vintage-engine:5.13.4")
