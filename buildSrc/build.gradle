@@ -9,7 +9,7 @@ dependencies {
   implementation 'com.jayway.jsonpath:json-path:2.9.0'
   implementation 'us.springett:cvss-calculator:1.4.3'
 
-  testImplementation('com.netflix.nebula:nebula-test:11.4.0') 
+  testImplementation('com.netflix.nebula:nebula-test:11.5.0') 
   testImplementation('org.spockframework:spock-core:2.3-groovy-4.0')
   testImplementation("org.spockframework:spock-junit4:2.3-groovy-4.0")
   testImplementation("org.junit.vintage:junit-vintage-engine:6.0.0")
