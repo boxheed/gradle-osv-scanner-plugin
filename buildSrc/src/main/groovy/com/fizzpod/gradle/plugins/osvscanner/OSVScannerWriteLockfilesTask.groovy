@@ -1,4 +1,4 @@
-/* (C) 2024 */
+/* (C) 2024-2025 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -46,7 +46,7 @@ public class OSVScannerWriteLockfilesTask extends DefaultTask {
     static def run = { execOps ->
         execOps.exec(
             {
-                commandLine = ["gradle", "dependencies", "--write-locks"]
+                commandLine = ["gradle", "dependencies", "--write-locks", "resolveAndLockAll"]
             }
         )
     }
