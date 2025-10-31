@@ -1,4 +1,4 @@
-/* (C) 2024 */
+/* (C) 2024-2025 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -10,7 +10,7 @@ public class OSVScannerPluginExtension {
     def arch = null
     def mode = "recursive"
     def format = "json"
-    def flags = ""
+    def flags = "--no-ignore"
     def binary = ""
     def licences = ""
     def sbom = ""

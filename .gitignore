@@ -6,6 +6,7 @@ bin
 lefthook-local.yml
 .osv-scanner
 .git-semver
+*.lockfile
 
 
 # General
