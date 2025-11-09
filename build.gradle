@@ -16,6 +16,11 @@ buildscript {
 }
 
 apply plugin: 'com.fizzpod.pater-build'
+
+tasks.withType(com.fizzpod.gradle.plugins.gitsemver.GitSemverNextVersionTask) {
+    enabled = false
+}
+
 apply from: './buildSrc/build.gradle'
 
 sourceSets {
