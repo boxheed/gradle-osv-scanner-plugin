@@ -7,7 +7,7 @@ dependencies {
   implementation 'org.kohsuke:github-api:1.330'
   implementation 'commons-io:commons-io:2.21.0'
   implementation 'com.jayway.jsonpath:json-path:2.10.0'
-  implementation 'us.springett:cvss-calculator:1.4.3'
+  implementation 'us.springett:cvss-calculator:1.5.1'
 
   testImplementation('com.netflix.nebula:nebula-test:11.7.1') 
   testImplementation('org.spockframework:spock-core:2.3-groovy-4.0')
