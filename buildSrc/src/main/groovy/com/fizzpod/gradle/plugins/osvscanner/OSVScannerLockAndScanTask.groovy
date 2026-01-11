@@ -1,4 +1,4 @@
-/* (C) 2024 */
+/* (C) 2024-2026 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -44,9 +44,15 @@ public class OSVScannerLockAndScanTask extends DefaultTask {
     }
 
     static def run = { project, execOps ->
+        project.getLogger().debug("Deleting lock files")
         OSVScannerDeleteLockfilesTask.run(project)
-        OSVScannerWriteLockfilesTask.run(execOps)
+        project.getLogger().debug("Lock files deleted")
+        project.getLogger().debug("Writing lock files")
+        OSVScannerWriteLockfilesTask.run(project, execOps)
+        project.getLogger().debug("Lock files written")
+        project.getLogger().debug("Running scan")
         OSVScannerScanTask.run(project)
+        project.getLogger().debug("Scan completed")
         OSVScannerDeleteLockfilesTask.run(project)
     }
 

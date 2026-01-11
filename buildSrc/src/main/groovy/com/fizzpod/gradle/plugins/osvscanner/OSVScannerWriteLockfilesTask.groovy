@@ -1,4 +1,4 @@
-/* (C) 2024-2025 */
+/* (C) 2024-2026 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -40,13 +40,23 @@ public class OSVScannerWriteLockfilesTask extends DefaultTask {
 
     @TaskAction
     def runTask() {
-        OSVScannerWriteLockfilesTask.run(this.execOps)
+        OSVScannerWriteLockfilesTask.run(this.project, this.execOps)
     }
 
-    static def run = { execOps ->
+    static def run = { project, execOps ->
+        String executable = System.getProperty("org.gradle.appname", "gradle")
+        if (executable == "gradlew") {
+            String wrapperName = System.getProperty("os.name").toLowerCase().contains("windows") ? "gradlew.bat" : "gradlew"
+            File wrapperScript = new File(project.getRootDir(), wrapperName)
+    
+            if (wrapperScript.exists()) {
+                project.logger.info("Gradle was invoked with wrapper: ${wrapperScript.absolutePath}")
+                executable = wrapperScript.getAbsolutePath()
+            }
+        }
         execOps.exec(
             {
-                commandLine = ["gradle", "dependencies", "--write-locks", "resolveAndLockAll"]
+                commandLine = [executable, "dependencies", "--write-locks", "resolveAndLockAll"]
             }
         )
     }
