@@ -5,7 +5,6 @@ package com.fizzpod.gradle.plugins.osvscanner
 import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
 
 import groovy.json.*
-import groovy.json.JsonSlurper
 import javax.inject.Inject
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
@@ -112,11 +111,11 @@ public class OSVScannerRunnerTaskHelper {
         }
         def cvssScore = 0
         def threshold = context.extension.failOnThreshold
-        severities.each { item -> 
+        severities.each { item ->
             def score = Cvss.fromVector(item.score).calculateScore().getBaseScore()
             switch(item.type) {
-                case "CVSS_V2": cvssScore = cvssScore < score? score: cvssScore; break
-                default: cvssScore = cvssScore < score? score: cvssScore; break
+                case "CVSS_V2": cvssScore = cvssScore < score ? score : cvssScore; break
+                default: cvssScore = cvssScore < score ? score : cvssScore; break
             }
         }
 
