@@ -113,8 +113,8 @@ public class OSVScannerInstallTask extends DefaultTask {
         GitHub github = GitHub.connectAnonymously()
         GHRepository osvScannerRepository = github.getRepository(extension.repository)
         GHRelease osvRelease = null
-        //match against requeired release
-        if("latest".equalsIgnoreCase(extension.version)) {
+        // match against required release
+        if ("latest".equalsIgnoreCase(extension.version)) {
             osvRelease = osvScannerRepository.getLatestRelease()
         } else {
             try {
@@ -122,7 +122,7 @@ public class OSVScannerInstallTask extends DefaultTask {
             } catch (Exception e) {
                 context.logger.debug("Could not find release by tag {}", extension.version, e)
             }
-            if(osvRelease == null) {
+            if (osvRelease == null) {
                 osvRelease = osvScannerRepository.getLatestRelease()
             }
         }
