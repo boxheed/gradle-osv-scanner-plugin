@@ -1,4 +1,4 @@
-/* (C) 2024-2025 */
+/* (C) 2024-2026 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -112,15 +112,19 @@ public class OSVScannerInstallTask extends DefaultTask {
         def extension = context.extension
         GitHub github = GitHub.connectAnonymously()
         GHRepository osvScannerRepository = github.getRepository(extension.repository)
-        GHRelease osvRelease = osvScannerRepository.getLatestRelease()
-        //match against requeired release
-        if(!"latest".equalsIgnoreCase(extension.version)) {
-            Iterable<GHRelease> osvReleases = osvScannerRepository.listReleases()
-            osvReleases.forEach(release -> {
-                if(extension.version.equalsIgnoreCase(release.getName())) {
-                    osvRelease = release
-                }
-            })
+        GHRelease osvRelease = null
+        // match against required release
+        if ("latest".equalsIgnoreCase(extension.version)) {
+            osvRelease = osvScannerRepository.getLatestRelease()
+        } else {
+            try {
+                osvRelease = osvScannerRepository.getReleaseByTagName(extension.version)
+            } catch (Exception e) {
+                context.logger.debug("Could not find release by tag {}", extension.version, e)
+            }
+            if (osvRelease == null) {
+                osvRelease = osvScannerRepository.getLatestRelease()
+            }
         }
         context.logger.info("osv-scanner version resolved to {}", osvRelease.getName())
         return osvRelease
