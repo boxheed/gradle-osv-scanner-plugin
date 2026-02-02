@@ -55,6 +55,20 @@ public class OSVScannerInstallTask extends DefaultTask {
         context.extension = extension
         context.os = getOs(context)
         context.arch = getArch(context)
+
+        if (!"latest".equalsIgnoreCase(extension.version)) {
+            def installedVersion = getInstalledVersion(project)
+            if (extension.version.equalsIgnoreCase(installedVersion)) {
+                def installFolder = getInstallRoot(project)
+                def binaryName = getBinaryName(context.os, context.arch)
+                def installedBinary = new File(installFolder, binaryName)
+                if (installedBinary.exists()) {
+                    context.logger.info("OSV Scanner version {} already installed at {}. Skipping download.", installedVersion, installedBinary)
+                    return
+                }
+            }
+        }
+
         context.release = getRelease(context)
         context.asset = getAsset(context)
         context.location = getCacheLocation(context)
