@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
+import groovy.json.JsonSlurper
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -120,6 +121,11 @@ class OSVScannerPluginSpec extends Specification {
         then: 
             //TODO proper assertion
             !project.getTasksByName(OSVScannerLicencesTask.NAME, false).isEmpty()
+            def reportFile = new File(project.buildDir, "osv-scanner/osv-scanner-exp-lic.json")
+            reportFile.exists()
+            def json = new JsonSlurper().parseText(reportFile.text)
+            json.license_summary != null
+            !json.license_summary.isEmpty()
     }
 
         def "run OSVScannerScanTask"() {
