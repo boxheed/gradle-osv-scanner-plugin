@@ -10,6 +10,7 @@ import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.*
 import spock.util.io.*
+import groovy.json.JsonSlurper
 
 class OSVScannerPluginSpec extends Specification {
 
@@ -117,6 +118,11 @@ class OSVScannerPluginSpec extends Specification {
         then: 
             //TODO proper assertion
             !project.getTasksByName(OSVScannerLicencesTask.NAME, false).isEmpty()
+            def reportFile = new File(project.buildDir, "osv-scanner/osv-scanner-exp-lic.json")
+            reportFile.exists()
+            def json = new JsonSlurper().parseText(reportFile.text)
+            json.license_summary != null
+            !json.license_summary.isEmpty()
     }
 
         def "run OSVScannerScanTask"() {
