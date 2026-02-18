@@ -1,7 +1,8 @@
-/* (C) 2024-2025 */
+/* (C) 2024-2026 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
+import groovy.json.JsonSlurper
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -73,8 +74,15 @@ class OSVScannerPluginSpec extends Specification {
             def task = project.getTasksByName(OSVScannerInstallAllTask.NAME, false).iterator().next()
             task.runTask()
         then: 
-            //TODO proper assertion
             !project.getTasksByName(OSVScannerInstallAllTask.NAME, false).isEmpty()
+            def installDir = new File(root, ".osv-scanner")
+            installDir.exists()
+            new File(installDir, "osv-scanner_linux_amd64").exists()
+            new File(installDir, "osv-scanner_linux_arm64").exists()
+            new File(installDir, "osv-scanner_darwin_amd64").exists()
+            new File(installDir, "osv-scanner_darwin_arm64").exists()
+            new File(installDir, "osv-scanner_windows_amd64.exe").exists()
+            new File(installDir, "osv-scanner_windows_arm64.exe").exists()
     }
 
 
@@ -115,6 +123,10 @@ class OSVScannerPluginSpec extends Specification {
             json.results.size() == 0
 
             !project.getTasksByName(OSVScannerLicencesSummaryTask.NAME, false).isEmpty()
+            def report = new File(project.buildDir, "osv-scanner/osv-scanner-exp-lic-sum.json")
+            report.exists()
+            def json = new groovy.json.JsonSlurper().parse(report)
+            json.size() > 0
     }
 
     def "run osvScannerLicencesTask"() {
@@ -135,6 +147,11 @@ class OSVScannerPluginSpec extends Specification {
         then: 
             //TODO proper assertion
             !project.getTasksByName(OSVScannerLicencesTask.NAME, false).isEmpty()
+            def reportFile = new File(project.buildDir, "osv-scanner/osv-scanner-exp-lic.json")
+            reportFile.exists()
+            def json = new JsonSlurper().parseText(reportFile.text)
+            json.license_summary != null
+            !json.license_summary.isEmpty()
     }
 
         def "run OSVScannerScanTask"() {
@@ -152,8 +169,11 @@ class OSVScannerPluginSpec extends Specification {
             def task = project.getTasksByName(OSVScannerScanTask.NAME, false).iterator().next()
             task.runTask()
         then: 
-            //TODO proper assertion
             !project.getTasksByName(OSVScannerScanTask.NAME, false).isEmpty()
+            def reportFile = new File(project.buildDir, 'osv-scanner/osv-scanner-scan.json')
+            reportFile.exists()
+            reportFile.length() > 0
+            new groovy.json.JsonSlurper().parse(reportFile) != null
     }
 /*
     def "run OSVScannerSbomTask"() {
