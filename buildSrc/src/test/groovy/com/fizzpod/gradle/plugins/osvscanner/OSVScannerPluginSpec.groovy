@@ -74,8 +74,15 @@ class OSVScannerPluginSpec extends Specification {
             def task = project.getTasksByName(OSVScannerInstallAllTask.NAME, false).iterator().next()
             task.runTask()
         then: 
-            //TODO proper assertion
             !project.getTasksByName(OSVScannerInstallAllTask.NAME, false).isEmpty()
+            def installDir = new File(root, ".osv-scanner")
+            installDir.exists()
+            new File(installDir, "osv-scanner_linux_amd64").exists()
+            new File(installDir, "osv-scanner_linux_arm64").exists()
+            new File(installDir, "osv-scanner_darwin_amd64").exists()
+            new File(installDir, "osv-scanner_darwin_arm64").exists()
+            new File(installDir, "osv-scanner_windows_amd64.exe").exists()
+            new File(installDir, "osv-scanner_windows_arm64.exe").exists()
     }
 
 
