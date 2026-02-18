@@ -134,8 +134,11 @@ class OSVScannerPluginSpec extends Specification {
             def task = project.getTasksByName(OSVScannerScanTask.NAME, false).iterator().next()
             task.runTask()
         then: 
-            //TODO proper assertion
             !project.getTasksByName(OSVScannerScanTask.NAME, false).isEmpty()
+            def reportFile = new File(project.buildDir, 'osv-scanner/osv-scanner-scan.json')
+            reportFile.exists()
+            reportFile.length() > 0
+            new groovy.json.JsonSlurper().parse(reportFile) != null
     }
 /*
     def "run OSVScannerSbomTask"() {
