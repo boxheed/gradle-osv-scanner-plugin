@@ -10,6 +10,7 @@ import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.*
 import spock.util.io.*
+import groovy.json.*
 
 class OSVScannerPluginSpec extends Specification {
 
