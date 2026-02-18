@@ -1,8 +1,7 @@
-/* (C) 2024-2026 */
+/* (C) 2024-2025 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
-import groovy.json.JsonSlurper
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -56,9 +55,15 @@ class OSVScannerPluginSpec extends Specification {
             def task = project.getTasksByName(OSVScannerInstallTask.NAME, false).iterator().next()
             task.runTask()
         then: 
-            //TODO proper assertion
             !project.getTasksByName(OSVScannerInstallTask.NAME, false).isEmpty()
+            def installDir = new File(root, ".osv-scanner")
+            installDir.exists()
+            // We can't guarantee which binary is downloaded without more complex mocking,
+            // but at least one should be there or the cache directory.
+            // This test is a bit flaky if it depends on external network.
+            installDir.list().length > 0
     }
+
     def "run osvScannerInstallAllTask"() {
         setup:
             fsFixture.create {
@@ -115,18 +120,13 @@ class OSVScannerPluginSpec extends Specification {
             def task = project.getTasksByName(OSVScannerLicencesSummaryTask.NAME, false).iterator().next()
             task.runTask()
         then: 
+            !project.getTasksByName(OSVScannerLicencesSummaryTask.NAME, false).isEmpty()
             def buildDir = project.buildDir
             def reportFile = new File(buildDir, "osv-scanner/osv-scanner-exp-lic-sum.json")
             reportFile.exists()
             def json = new groovy.json.JsonSlurper().parse(reportFile)
             json.results != null
             json.results.size() == 0
-
-            !project.getTasksByName(OSVScannerLicencesSummaryTask.NAME, false).isEmpty()
-            def report = new File(project.buildDir, "osv-scanner/osv-scanner-exp-lic-sum.json")
-            report.exists()
-            def json = new groovy.json.JsonSlurper().parse(report)
-            json.size() > 0
     }
 
     def "run osvScannerLicencesTask"() {
