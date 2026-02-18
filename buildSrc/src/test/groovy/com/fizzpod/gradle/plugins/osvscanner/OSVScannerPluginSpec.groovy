@@ -87,15 +87,33 @@ class OSVScannerPluginSpec extends Specification {
             def root = fsFixture.getCurrentPath().toFile()
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
 
+            // Mock OSV-Scanner binary
+            def mockBinary = new File(root, "osv-scanner" + (System.getProperty("os.name").toLowerCase().contains("windows") ? ".bat" : ""))
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                mockBinary.text = "@echo off\r\necho {\"results\": []}"
+            } else {
+                mockBinary.text = "#!/bin/sh\necho '{\"results\": []}'"
+                mockBinary.setExecutable(true)
+            }
+
         when:
             def plugin = new OSVScannerPlugin()
             plugin.apply(project)
-            project.getTasksByName(OSVScannerInstallTask.NAME, false).iterator().next().runTask()
+
+            // Configure extension to use mock binary
+            def extension = project.extensions.getByType(OSVScannerPluginExtension)
+            extension.binary = mockBinary.absolutePath
            
             def task = project.getTasksByName(OSVScannerLicencesSummaryTask.NAME, false).iterator().next()
             task.runTask()
         then: 
-            //TODO proper assertion
+            def buildDir = project.buildDir
+            def reportFile = new File(buildDir, "osv-scanner/osv-scanner-exp-lic-sum.json")
+            reportFile.exists()
+            def json = new groovy.json.JsonSlurper().parse(reportFile)
+            json.results != null
+            json.results.size() == 0
+
             !project.getTasksByName(OSVScannerLicencesSummaryTask.NAME, false).isEmpty()
     }
 
