@@ -1,7 +1,8 @@
-/* (C) 2024-2025 */
+/* (C) 2024-2026 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
+import groovy.json.JsonSlurper
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -10,7 +11,6 @@ import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.*
 import spock.util.io.*
-import groovy.json.JsonSlurper
 
 class OSVScannerPluginSpec extends Specification {
 
