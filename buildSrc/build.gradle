@@ -43,5 +43,17 @@ dependencies {
         require '3.27.7'
       }
     }
+    implementation('com.fasterxml.jackson.core:jackson-core') {
+      because 'version  2.20.0 imported as a dependency has a vulnerability'
+      version {
+        require '2.21.1'
+      }
+    }
+    testImplementation('com.fasterxml.jackson.core:jackson-core') {
+      because 'version  2.20.0 imported as a dependency has a vulnerability'
+      version {
+        require '2.21.1'
+      }
+    }
   }
 }
