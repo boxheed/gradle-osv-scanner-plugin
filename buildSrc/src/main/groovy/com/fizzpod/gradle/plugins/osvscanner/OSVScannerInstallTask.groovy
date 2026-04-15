@@ -13,6 +13,7 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 import org.kohsuke.github.*
 
+@org.gradle.api.tasks.UntrackedTask(because="Downloads and installs binaries")
 public class OSVScannerInstallTask extends DefaultTask {
 
     public static final String NAME = "osvInstall"
