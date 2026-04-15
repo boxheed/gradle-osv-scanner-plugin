@@ -1,4 +1,4 @@
-/* (C) 2024 */
+/* (C) 2024-2026 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -12,6 +12,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 
+@org.gradle.api.tasks.UntrackedTask(because="Downloads and installs binaries")
 public class OSVScannerInstallAllTask extends OSVScannerInstallTask {
 
     public static final String NAME = "osvInstallAll"

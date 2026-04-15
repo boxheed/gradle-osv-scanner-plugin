@@ -1,0 +1,35 @@
+[[PackageOverrides]]
+name = "cglib:cglib-nodep"
+license.override = ["Apache-2.0"]
+
+[[PackageOverrides]]
+name = "junit:junit"
+license.override = ["EPL-1.0"]
+
+[[PackageOverrides]]
+name = "org.hamcrest:hamcrest-core"
+license.override = ["BSD-3-Clause"]
+
+[[PackageOverrides]]
+name = "org.junit.platform:junit-platform-commons"
+license.override = ["EPL-2.0"]
+
+[[PackageOverrides]]
+name = "org.junit.platform:junit-platform-engine"
+license.override = ["EPL-2.0"]
+
+[[PackageOverrides]]
+name = "org.junit.platform:junit-platform-launcher"
+license.override = ["EPL-2.0"]
+
+[[PackageOverrides]]
+name = "org.junit.vintage:junit-vintage-engine"
+license.override = ["EPL-2.0"]
+
+[[PackageOverrides]]
+name = "org.junit:junit-bom"
+license.override = ["EPL-2.0"]
+
+[[PackageOverrides]]
+name = "org.kohsuke:github-api"
+license.override = ["MIT"]

@@ -4,9 +4,7 @@ package com.fizzpod.gradle.plugins.osvscanner
 
 import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
 
-import com.jayway.jsonpath.*
 import groovy.json.*
-import groovy.json.JsonSlurper
 import javax.inject.Inject
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
@@ -17,8 +15,6 @@ import org.kohsuke.github.*
 import us.springett.cvss.*
 
 public class OSVScannerRunnerTaskHelper {
-
-    private JsonSlurper jsonSlurper = new JsonSlurper()
 
     static def getReportFile(def context) {
         def extension = context.extension
@@ -85,7 +81,15 @@ public class OSVScannerRunnerTaskHelper {
     }
 
     static def failOnCount(def exitValue, def output, def context) {
-        def vulns = JsonPath.parse(output).read('$.results[*].packages[*].vulnerabilities[*]')
+        def json = new JsonSlurper().parseText(output)
+        def vulns = []
+        json.results?.each { result ->
+            result.packages?.each { pkg ->
+                pkg.vulnerabilities?.each { vuln ->
+                    vulns.add(vuln)
+                }
+            }
+        }
         def vulnCount = vulns.size()
         def threshold = context.extension.failOnThreshold
         if(vulnCount >= threshold) {
@@ -94,14 +98,24 @@ public class OSVScannerRunnerTaskHelper {
     }
 
     static def failOnScore(def exitValue, def output, def context) {
-        def severities = JsonPath.parse(output).read('$.results[*].packages[*].vulnerabilities[*].severity[*]')
+        def json = new JsonSlurper().parseText(output)
+        def severities = []
+        json.results?.each { result ->
+            result.packages?.each { pkg ->
+                pkg.vulnerabilities?.each { vuln ->
+                    vuln.severity?.each { sev ->
+                        severities.add(sev)
+                    }
+                }
+            }
+        }
         def cvssScore = 0
         def threshold = context.extension.failOnThreshold
-        severities.each { item -> 
+        severities.each { item ->
             def score = Cvss.fromVector(item.score).calculateScore().getBaseScore()
             switch(item.type) {
-                case "CVSS_V2": cvssScore = cvssScore < score? score: cvssScore; break
-                default: cvssScore = cvssScore < score? score: cvssScore; break
+                case "CVSS_V2": cvssScore = cvssScore < score ? score : cvssScore; break
+                default: cvssScore = cvssScore < score ? score : cvssScore; break
             }
         }
 

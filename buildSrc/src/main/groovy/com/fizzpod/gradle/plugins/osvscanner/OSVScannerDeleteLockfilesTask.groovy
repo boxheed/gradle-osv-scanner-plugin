@@ -1,4 +1,4 @@
-/* (C) 2024 */
+/* (C) 2024-2026 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -14,6 +14,7 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 
+@org.gradle.api.tasks.UntrackedTask(because="Deletes lockfiles")
 public class OSVScannerDeleteLockfilesTask extends DefaultTask {
 
     public static final String NAME = "deleteLockfiles"

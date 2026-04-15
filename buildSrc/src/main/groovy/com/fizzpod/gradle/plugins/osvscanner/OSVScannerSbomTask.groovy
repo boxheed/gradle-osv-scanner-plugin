@@ -1,4 +1,4 @@
-/* (C) 2024 */
+/* (C) 2024-2026 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -14,6 +14,7 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 import org.kohsuke.github.*
 
+@org.gradle.api.tasks.UntrackedTask(because="Generates reports")
 public class OSVScannerSbomTask extends DefaultTask {
 
     public static final String NAME = "osvSbom"

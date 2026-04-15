@@ -1,4 +1,4 @@
-/* (C) 2024-2025 */
+/* (C) 2024-2026 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -13,6 +13,7 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 import org.kohsuke.github.*
 
+@org.gradle.api.tasks.UntrackedTask(because="Downloads and installs binaries")
 public class OSVScannerInstallTask extends DefaultTask {
 
     public static final String NAME = "osvInstall"
@@ -55,6 +56,20 @@ public class OSVScannerInstallTask extends DefaultTask {
         context.extension = extension
         context.os = getOs(context)
         context.arch = getArch(context)
+
+        if (!"latest".equalsIgnoreCase(extension.version)) {
+            def installedVersion = getInstalledVersion(project)
+            if (extension.version.equalsIgnoreCase(installedVersion)) {
+                def installFolder = getInstallRoot(project)
+                def binaryName = getBinaryName(context.os, context.arch)
+                def installedBinary = new File(installFolder, binaryName)
+                if (installedBinary.exists()) {
+                    context.logger.info("OSV Scanner version {} already installed at {}. Skipping download.", installedVersion, installedBinary)
+                    return
+                }
+            }
+        }
+
         context.release = getRelease(context)
         context.asset = getAsset(context)
         context.location = getCacheLocation(context)
@@ -112,15 +127,19 @@ public class OSVScannerInstallTask extends DefaultTask {
         def extension = context.extension
         GitHub github = GitHub.connectAnonymously()
         GHRepository osvScannerRepository = github.getRepository(extension.repository)
-        GHRelease osvRelease = osvScannerRepository.getLatestRelease()
-        //match against requeired release
-        if(!"latest".equalsIgnoreCase(extension.version)) {
-            Iterable<GHRelease> osvReleases = osvScannerRepository.listReleases()
-            osvReleases.forEach(release -> {
-                if(extension.version.equalsIgnoreCase(release.getName())) {
-                    osvRelease = release
-                }
-            })
+        GHRelease osvRelease = null
+        // match against required release
+        if ("latest".equalsIgnoreCase(extension.version)) {
+            osvRelease = osvScannerRepository.getLatestRelease()
+        } else {
+            try {
+                osvRelease = osvScannerRepository.getReleaseByTagName(extension.version)
+            } catch (Exception e) {
+                context.logger.debug("Could not find release by tag {}", extension.version, e)
+            }
+            if (osvRelease == null) {
+                osvRelease = osvScannerRepository.getLatestRelease()
+            }
         }
         context.logger.info("osv-scanner version resolved to {}", osvRelease.getName())
         return osvRelease

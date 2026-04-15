@@ -6,19 +6,22 @@ dependencies {
 
   implementation 'org.kohsuke:github-api:1.330'
   implementation 'commons-io:commons-io:2.21.0'
-  implementation 'com.jayway.jsonpath:json-path:2.10.0'
+  implementation 'com.jayway.jsonpath:json-path:3.0.0'
   implementation 'us.springett:cvss-calculator:1.5.1'
 
-  testImplementation('com.netflix.nebula:nebula-test:11.11.3') 
+  testImplementation('com.netflix.nebula:nebula-test:12.1.0')
   testImplementation('org.spockframework:spock-core:2.4-groovy-4.0')
   testImplementation("org.spockframework:spock-junit4:2.4-groovy-4.0")
-  testImplementation("org.junit.vintage:junit-vintage-engine:6.0.1")
+  testImplementation("org.junit.vintage:junit-vintage-engine:6.0.3")
 
   test {
     useJUnitPlatform()
     testLogging {
         events "passed", "skipped", "failed"
     }
+    jvmArgs "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+            "--add-opens", "java.base/java.util=ALL-UNNAMED",
+            "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED"
   }
 
   constraints {
@@ -32,6 +35,24 @@ dependencies {
       because 'version 3.17.0 imported as a dependency has a vulnerability'
       version {
         require '3.18.0'
+      }
+    }
+    testImplementation('org.assertj:assertj-core') {
+      because 'version 3.27.3 imported as a dependency has a vulnerability'
+      version {
+        require '3.27.7'
+      }
+    }
+    implementation('com.fasterxml.jackson.core:jackson-core') {
+      because 'version  2.20.0 imported as a dependency has a vulnerability'
+      version {
+        require '2.21.1'
+      }
+    }
+    testImplementation('com.fasterxml.jackson.core:jackson-core') {
+      because 'version  2.20.0 imported as a dependency has a vulnerability'
+      version {
+        require '2.21.1'
       }
     }
   }

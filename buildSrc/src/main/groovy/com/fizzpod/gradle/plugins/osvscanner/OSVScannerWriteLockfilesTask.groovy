@@ -14,6 +14,7 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 
+@org.gradle.api.tasks.UntrackedTask(because="Generates reports")
 public class OSVScannerWriteLockfilesTask extends DefaultTask {
 
     public static final String NAME = "writeLockfiles"
