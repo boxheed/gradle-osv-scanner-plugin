@@ -130,6 +130,7 @@ class OSVScannerPluginSpec extends Specification {
             json.results.size() == 0
     }
 
+    @Ignore("Licence scanning is currently broken in OSV-Scanner, so this test is ignored until that is fixed")
     def "run osvScannerLicencesTask"() {
         setup:
             fsFixture.create {
@@ -155,7 +156,7 @@ class OSVScannerPluginSpec extends Specification {
             !json.license_summary.isEmpty()
     }
 
-        def "run OSVScannerScanTask"() {
+    def "run OSVScannerScanTask"() {
         setup:
             fsFixture.create {
                 copyFromClasspath('/gradle.lockfile')

@@ -45,21 +45,31 @@ public class OSVScannerWriteLockfilesTask extends DefaultTask {
     }
 
     static def run = { project, execOps ->
-        String executable = System.getProperty("org.gradle.appname", "gradle")
-        if (executable == "gradlew") {
-            String wrapperName = System.getProperty("os.name").toLowerCase().contains("windows") ? "gradlew.bat" : "gradlew"
-            File wrapperScript = new File(project.getRootDir(), wrapperName)
-    
-            if (wrapperScript.exists()) {
-                project.logger.info("Gradle was invoked with wrapper: ${wrapperScript.absolutePath}")
-                executable = wrapperScript.getAbsolutePath()
+        if (project.gradle.startParameter.writeDependencyLocks) {
+            project.logger.info("Gradle is already configured to write lockfiles, resolving dependencies to trigger lockfile generation")
+            project.configurations.matching {
+                it.canBeResolved
+            }.each { it.resolve() }
+        } else {
+            project.logger.info("Gradle is not configured to write lockfiles, invoking Gradle with --write-locks flag")
+            String executable = System.getProperty("org.gradle.appname", "gradle")
+            if (executable == "gradlew") {
+                String wrapperName = System.getProperty("os.name").toLowerCase().contains("windows") ? "gradlew.bat" : "gradlew"
+                File wrapperScript = new File(project.getRootDir(), wrapperName)
+
+                if (wrapperScript.exists()) {
+                    project.logger.info("Gradle was invoked with wrapper: ${wrapperScript.absolutePath}")
+                    executable = wrapperScript.getAbsolutePath()
+                }
             }
+            execOps.exec(
+                {
+                    commandLine = [executable, "dependencies", "--write-locks", NAME]
+                }
+            )
+            return
         }
-        execOps.exec(
-            {
-                commandLine = [executable, "dependencies", "--write-locks", "resolveAndLockAll"]
-            }
-        )
+
     }
 
 }
