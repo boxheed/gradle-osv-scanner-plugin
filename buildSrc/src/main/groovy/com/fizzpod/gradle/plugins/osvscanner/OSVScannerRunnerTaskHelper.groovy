@@ -1,4 +1,4 @@
-/* (C) 2024 */
+/* (C) 2024-2026 */
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
@@ -82,15 +82,14 @@ public class OSVScannerRunnerTaskHelper {
 
     static def failOnCount(def exitValue, def output, def context) {
         def json = new JsonSlurper().parseText(output)
-        def vulns = []
+        def vulnCount = 0
         json.results?.each { result ->
             result.packages?.each { pkg ->
                 pkg.vulnerabilities?.each { vuln ->
-                    vulns.add(vuln)
+                    vulnCount++
                 }
             }
         }
-        def vulnCount = vulns.size()
         def threshold = context.extension.failOnThreshold
         if(vulnCount >= threshold) {
             throw new RuntimeException("Vulnerabilities found; number found ($vulnCount) exceeds threshold ($threshold).")
