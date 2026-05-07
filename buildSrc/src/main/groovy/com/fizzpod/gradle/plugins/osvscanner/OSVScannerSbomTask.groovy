@@ -2,70 +2,91 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
-import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
-import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerRunnerTaskHelper.*
-
-import groovy.json.*
 import javax.inject.Inject
-import org.apache.commons.io.FileUtils
-import org.apache.commons.lang3.SystemUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.kohsuke.github.*
+import org.gradle.api.tasks.UntrackedTask
+import org.gradle.process.ExecOperations
 
-@org.gradle.api.tasks.UntrackedTask(because="Generates reports")
-public class OSVScannerSbomTask extends DefaultTask {
+@UntrackedTask(because="Generates reports")
+public abstract class OSVScannerSbomTask extends DefaultTask {
 
     public static final String NAME = "osvSbom"
 
-    private Project project
+    @Input
+    abstract Property<String> getFormat()
+
+    @Input
+    abstract Property<String> getFlags()
+
+    @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract RegularFileProperty getOsvScannerBinary()
+
+    @Input
+    abstract Property<String> getSbom()
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract DirectoryProperty getProjectDir()
+
+    @OutputFile
+    abstract RegularFileProperty getReportFile()
 
     @Inject
-    public OSVScannerSbomTask(Project project) {
-        this.project = project
-    }
+    protected abstract ExecOperations getExecOperations()
 
-    static register(Project project) {
+    static def register(Project project) {
         project.getLogger().info("Registering task {}", NAME)
-        def taskContainer = project.getTasks()
-
-        taskContainer.create([name: NAME,
-            type: OSVScannerSbomTask,
-            dependsOn: [],
-            group: OSVScannerPlugin.GROUP,
-            description: 'Runs osv-scanner with --sbom on your project'])
+        def extension = project.extensions.getByType(OSVScannerPluginExtension)
+        return project.tasks.register(NAME, OSVScannerSbomTask) {
+            it.group = OSVScannerPlugin.GROUP
+            it.description = 'Runs osv-scanner with --sbom on your project'
+            it.getFormat().set(extension.format)
+            it.getFlags().set(extension.flags)
+            it.getSbom().set(extension.sbom)
+            it.getProjectDir().set(project.layout.projectDirectory)
+            it.getReportFile().set(project.layout.buildDirectory.file(extension.location.map { loc ->
+                String format = extension.format.get()
+                loc + "/osv-scanner-sbom." + (format == 'json' ? 'json' : 'txt')
+            }))
+        }
     }
 
     @TaskAction
-    def runTask() {
-        def extension = project[OSVScannerPlugin.NAME]
-        def context = [:]
-        context.logger = project.getLogger()
-        context.project = project
-        context.extension = extension
-        context.executable = getExecutable(context)
-        context.mode = "sbom"
-        context.flags = getFlags(context)
-        context.cmd = createCommand(context)
-        context.failureMsg = "Vulnerabilities found."
-        context.report = getReportFile(context)
-        runCommand(context)
-    }
-
-    def createCommand(def context) {
-        def extension = context.extension
-        def mode = context.mode
-        def commandParts = []
-        commandParts.add(context.executable.getAbsolutePath())
-        commandParts.add("--format")
-        commandParts.add(extension.format)
-        commandParts.add(context.flags)
-        commandParts.add("--sbom=" + extension.sbom)
-        commandParts.add(context.project.projectDir)
-        def command = commandParts.join(" ")
-        return command
-    }
+    void runTask() {
+        File projectDir = getProjectDir().get().asFile
+        File executable = getOsvScannerBinary().get().asFile
         
+        List<String> commandList = [
+            executable.absolutePath,
+            "--format", getFormat().get(),
+            "--sbom=" + getSbom().get()
+        ]
+        if (getFlags().isPresent() && !getFlags().get().isEmpty()) {
+            commandList.addAll(getFlags().get().split(" "))
+        }
+        commandList.add(projectDir.absolutePath)
+
+        OSVScannerRunnerTaskHelper.runCommand(
+            getExecOperations(),
+            commandList,
+            getReportFile().get().asFile,
+            logger,
+            "exit",
+            0.0,
+            "Vulnerabilities found."
+        )
+    }
 
 }

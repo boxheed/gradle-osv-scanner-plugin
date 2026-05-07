@@ -53,7 +53,12 @@ class OSVScannerPluginSpec extends Specification {
         when:
             def plugin = new OSVScannerPlugin()
             plugin.apply(project)
+            def resolveTask = project.getTasksByName(OSVScannerResolveVersionTask.NAME, false).iterator().next()
+            resolveTask.runTask()
+            println "Resolve Task Output: " + resolveTask.getResolvedVersionFile().get().asFile.absolutePath
+            println "Exists? " + resolveTask.getResolvedVersionFile().get().asFile.exists()
             def task = project.getTasksByName(OSVScannerInstallTask.NAME, false).iterator().next()
+            println "Install Task Input:  " + task.getResolvedVersionFile().get().asFile.absolutePath
             task.runTask()
         then: 
             !project.getTasksByName(OSVScannerInstallTask.NAME, false).isEmpty()
@@ -77,6 +82,7 @@ class OSVScannerPluginSpec extends Specification {
         when:
             def plugin = new OSVScannerPlugin()
             plugin.apply(project)
+            project.getTasksByName(OSVScannerResolveVersionTask.NAME, false).iterator().next().runTask()
             def task = project.getTasksByName(OSVScannerInstallAllTask.NAME, false).iterator().next()
             task.runTask()
         then: 
@@ -116,9 +122,10 @@ class OSVScannerPluginSpec extends Specification {
 
             // Configure extension to use mock binary
             def extension = project.extensions.getByType(OSVScannerPluginExtension)
-            extension.binary = mockBinary.absolutePath
+            extension.getBinary().set(mockBinary.absolutePath)
            
             def task = project.getTasksByName(OSVScannerLicencesSummaryTask.NAME, false).iterator().next()
+            task.getOsvScannerBinary().set(mockBinary) // explicitly set the binary for the task as well since we don't have the task evaluation graph here
             task.runTask()
         then: 
             !project.getTasksByName(OSVScannerLicencesSummaryTask.NAME, false).isEmpty()
@@ -167,6 +174,7 @@ class OSVScannerPluginSpec extends Specification {
         when:
             def plugin = new OSVScannerPlugin()
             plugin.apply(project)
+            project.getTasksByName(OSVScannerResolveVersionTask.NAME, false).iterator().next().runTask()
             project.getTasksByName(OSVScannerInstallTask.NAME, false).iterator().next().runTask()
             def task = project.getTasksByName(OSVScannerScanTask.NAME, false).iterator().next()
             task.runTask()

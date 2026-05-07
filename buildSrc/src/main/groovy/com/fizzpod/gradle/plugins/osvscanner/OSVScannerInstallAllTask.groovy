@@ -2,73 +2,75 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
-import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
-
-import groovy.json.*
 import javax.inject.Inject
-import org.apache.commons.io.FileUtils
-import org.apache.commons.lang3.SystemUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
-@org.gradle.api.tasks.UntrackedTask(because="Downloads and installs binaries")
-public class OSVScannerInstallAllTask extends OSVScannerInstallTask {
+@CacheableTask
+public abstract class OSVScannerInstallAllTask extends DefaultTask {
 
     public static final String NAME = "osvInstallAll"
 
-    private Project project
-    private def oses = [OSVScannerHelper.LINUX, OSVScannerHelper.MAC, OSVScannerHelper.WINDOWS] 
-    private def arches = [OSVScannerHelper.AMD64, OSVScannerHelper.ARM64] 
+    private def osArches = [
+        [OS.Family.LINUX.id, OS.Arch.AMD64.id],
+        [OS.Family.LINUX.id, OS.Arch.ARM64.id],
+        [OS.Family.MAC.id, OS.Arch.AMD64.id],
+        [OS.Family.MAC.id, OS.Arch.ARM64.id],
+        [OS.Family.WINDOWS.id, OS.Arch.AMD64.id],
+        [OS.Family.WINDOWS.id, OS.Arch.ARM64.id]
+    ]
 
-    private def currentOs
-    private def currentArch
+    @InputFile
+    @PathSensitive(PathSensitivity.NONE)
+    abstract RegularFileProperty getResolvedVersionFile()
+
+    @Input
+    abstract Property<String> getOsvScannerRepository()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOsvScannerLocation()
 
     @Inject
     public OSVScannerInstallAllTask(Project project) {
-        super(project)
-        this.project = project
+        def extension = project.extensions.getByType(OSVScannerPluginExtension)
+        getOsvScannerRepository().convention(extension.getRepository())
+        getOsvScannerLocation().convention(project.layout.projectDirectory.dir(".osv-scanner"))
     }
 
-    static register(Project project) {
+    static def register(Project project) {
         project.getLogger().info("Registering task {}", NAME)
-        def taskContainer = project.getTasks()
-
-        taskContainer.create([name: NAME,
-            type: OSVScannerInstallAllTask,
-            dependsOn: [],
-            group: OSVScannerPlugin.GROUP,
-            description: 'Downloads and installs all osv-scanner binaries'])
+        return project.tasks.register(NAME, OSVScannerInstallAllTask) {
+            it.group = OSVScannerPlugin.GROUP
+            it.description = 'Download and install all osv-scanner binaries'
+        }
     }
 
     @TaskAction
     def runTask() {
-        for(def os: oses) {
-            currentOs = os
-            for(def arch:arches) {
-                currentArch = arch
-                project.getLogger().lifecycle("Installating " + currentOs + ":" + currentArch)
-                super.runTask()
-            }
+        def version = getResolvedVersionFile().getAsFile().get().text.trim()
+        for (def osArch : osArches) {
+            def context = [:]
+            context.version = version
+            context.repo = getOsvScannerRepository().get()
+            context.location = getOsvScannerLocation().getAsFile().get()
+
+            context.os = OS.getOs(osArch[0])
+            context.arch = OS.getArch(osArch[1])
+            context.binary =
+                    OSVScannerInstallation.binary(context.location, context.version, context.os, context.arch)
+
+            Loggy.lifecycle("Installing {} : {} at {}", context.os, context.arch, context.binary)
+            OSVScannerInstallTask.run(context)
         }
     }
-    def getAsset(def context) {
-        context.os = currentOs
-        context.arch = currentArch
-        return super.getAsset(context)
-    }
-    
-    def install(def context) {
-        context.os = currentOs
-        context.arch = currentArch
-        super.install(context)
-    }
-    
-    def download(def context) {
-        context.os = currentOs
-        context.arch = currentArch
-        super.download(context)
-    }
-    
-
 }

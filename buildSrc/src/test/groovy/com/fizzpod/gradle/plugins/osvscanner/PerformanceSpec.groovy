@@ -1,21 +1,19 @@
+/* (C) 2024-2026 */
+/* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
-import spock.lang.Specification
 import groovy.json.JsonBuilder
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
+import spock.lang.Specification
 
 class PerformanceSpec extends Specification {
 
+    private static final Logger LOGGER = Logging.getLogger(PerformanceSpec)
+
     def "benchmark failOnScore"() {
         setup:
-        def context = [
-            extension: [
-                failOnThreshold: 10.0
-            ],
-            logger: [
-                lifecycle: { msg -> },
-                warn: { msg -> }
-            ]
-        ]
+        def threshold = 10.0
 
         // Generate a large JSON
         def builder = new JsonBuilder()
@@ -45,7 +43,7 @@ class PerformanceSpec extends Specification {
         when:
         long start = System.currentTimeMillis()
         for(int i=0; i<10; i++) {
-            OSVScannerRunnerTaskHelper.failOnScore(0, output, context)
+            OSVScannerRunnerTaskHelper.failOnScore(output, LOGGER, threshold)
         }
         long end = System.currentTimeMillis()
         println "Execution time for 10 iterations: ${end - start} ms"
@@ -56,15 +54,7 @@ class PerformanceSpec extends Specification {
 
     def "verify failOnCount logic"() {
         setup:
-        def context = [
-            extension: [
-                failOnThreshold: 5 // Low threshold
-            ],
-            logger: [
-                lifecycle: { msg -> },
-                warn: { msg -> }
-            ]
-        ]
+        def threshold = 5.0
         def builder = new JsonBuilder()
         // 2 vulns
         def data = [
@@ -85,31 +75,23 @@ class PerformanceSpec extends Specification {
         def output = builder.toString()
 
         when:
-        OSVScannerRunnerTaskHelper.failOnCount(0, output, context)
+        OSVScannerRunnerTaskHelper.failOnCount(output, threshold)
 
         then:
         noExceptionThrown() // 2 < 5
 
         when:
-        context.extension.failOnThreshold = 1
-        OSVScannerRunnerTaskHelper.failOnCount(0, output, context)
+        threshold = 1.0
+        OSVScannerRunnerTaskHelper.failOnCount(output, threshold)
 
         then:
         def e = thrown(RuntimeException)
-        e.message.contains("Vulnerabilities found; number found (2) exceeds threshold (1)")
+        e.message.contains("Vulnerabilities found; number found (2) exceeds threshold (1.0)")
     }
 
     def "verify failOnScore logic"() {
         setup:
-        def context = [
-            extension: [
-                failOnThreshold: 9.0
-            ],
-            logger: [
-                lifecycle: { msg -> println msg },
-                warn: { msg -> println msg }
-            ]
-        ]
+        def threshold = 9.0
         def builder = new JsonBuilder()
         // Score High (CVSS 3.1 Base Score for this vector is 9.8)
         def data = [
@@ -136,15 +118,15 @@ class PerformanceSpec extends Specification {
         def output = builder.toString()
 
         when:
-        OSVScannerRunnerTaskHelper.failOnScore(0, output, context)
+        OSVScannerRunnerTaskHelper.failOnScore(output, LOGGER, threshold)
 
         then:
         def e = thrown(RuntimeException)
         e.message.contains("exceeds threshold (9.0)")
 
         when:
-        context.extension.failOnThreshold = 10.0
-        OSVScannerRunnerTaskHelper.failOnScore(0, output, context)
+        threshold = 10.0
+        OSVScannerRunnerTaskHelper.failOnScore(output, LOGGER, threshold)
 
         then:
         noExceptionThrown()
