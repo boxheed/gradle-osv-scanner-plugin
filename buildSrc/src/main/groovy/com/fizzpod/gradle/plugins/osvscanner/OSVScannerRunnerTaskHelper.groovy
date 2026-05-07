@@ -2,26 +2,17 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
-import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
-
-import groovy.json.*
-import javax.inject.Inject
-import org.apache.commons.io.FileUtils
-import org.apache.commons.lang3.SystemUtils
-import org.gradle.api.DefaultTask
-import org.gradle.api.Project
-import org.gradle.api.tasks.TaskAction
-import org.kohsuke.github.*
-import us.springett.cvss.*
+import groovy.json.JsonSlurper
+import java.io.ByteArrayOutputStream
+import java.io.File
+import org.gradle.api.logging.Logger
+import org.gradle.process.ExecOperations
+import us.springett.cvss.Cvss
 
 public class OSVScannerRunnerTaskHelper {
 
-    static def getReportFile(def context) {
-        def extension = context.extension
-        def mode = context.mode
-        def buildDir = context.project.buildDir
-        def reportFolder = new File(buildDir, extension.location)
-        def format = extension.format
+    static File getReportFile(File buildDir, String location, String mode, String format) {
+        def reportFolder = new File(buildDir, location)
         def suffix = format
         switch(format) {
             case 'json': suffix = "json"; break
@@ -30,57 +21,51 @@ public class OSVScannerRunnerTaskHelper {
             case 'sarif': suffix = "sarif"; break
             default: suffix = "txt"
         }
-        def reportFile = new File(reportFolder, OSVScannerPlugin.EXE_NAME +"-" + mode + "." + suffix)
-        return reportFile
+        return new File(reportFolder, "osv-scanner-" + mode + "." + suffix)
     }
 
-    static def getExecutable(def context) {
-        context.os = getOs(context)
-        context.arch = getArch(context)
-        def binary = getBinaryFromConfig(context)
-        if(!binary.exists()) {
-            throw new RuntimeException("Cannot find osv-scanner binary on path " + binary)
+    static void runCommand(ExecOperations execOps, List<String> commandList, File reportFile, Logger logger, String failOn, double failOnThreshold, String failureMsg) {
+        def stdout = new ByteArrayOutputStream()
+        def stderr = new ByteArrayOutputStream()
+        
+        def result = execOps.exec {
+            it.commandLine commandList
+            it.standardOutput = stdout
+            it.errorOutput = stderr
+            it.ignoreExitValue = true
         }
-        context.logger.info("Using osv-scanner: {}", binary)
-        return binary
-    }
-
-    static def getFlags(def context) {
-        return context.extension.flags
-    }
-
-    static def runCommand(def context) {
-        def sout = new StringBuilder(), serr = new StringBuilder()
-        def proc = context.cmd.execute()
-        proc.waitForProcessOutput(sout, serr)
-        proc.waitFor()
-        def exitValue = proc.exitValue()
-        context.logger.lifecycle(serr.toString())
-        context.logger.lifecycle(sout.toString())
-        context.report.getParentFile().mkdirs()
-        context.report.write(sout.toString())
-        context.logger.lifecycle("Output written to " + context.report)
+        
+        def exitValue = result.exitValue
+        def soutStr = stdout.toString()
+        def serrStr = stderr.toString()
+        
+        logger.lifecycle(serrStr)
+        logger.lifecycle(soutStr)
+        
+        reportFile.getParentFile().mkdirs()
+        reportFile.text = soutStr
+        logger.lifecycle("Output written to " + reportFile)
+        
         if(exitValue >= 127) {
             throw new RuntimeException("An error has occured running osv-scanner. Exit: " + exitValue)
         }
-        failOn(exitValue, sout.toString(), context)
-        return
+        
+        handleFailure(exitValue, soutStr, logger, failOn, failOnThreshold, failureMsg)
     }
 
-    static def failOn(def exitValue, def output, def context) {
-        def extension = context.extension
-        if(!"json".equals(extension.format) && !"exit".equals(extension.failOn)) {
-            context.logger.warn("Only json format is supported for failOn. Ignoring failOn: " + extension.failOn)
-            extension.failOn = "exit"
-        }
-        switch(extension.failOn) {
-            case "count": failOnCount(exitValue, output, context); break
-            case "score": failOnScore(exitValue, output, context); break
-            default: failOnExit(exitValue, output, context); break
+    static void handleFailure(int exitValue, String output, Logger logger, String failOn, double failOnThreshold, String failureMsg) {
+        switch(failOn) {
+            case "count": failOnCount(output, failOnThreshold); break
+            case "score": failOnScore(output, logger, failOnThreshold); break
+            default: 
+                if(exitValue > 0 && exitValue < 127) {
+                    throw new RuntimeException(failureMsg + " Exit: " + exitValue)
+                }
+                break
         }
     }
 
-    static def failOnCount(def exitValue, def output, def context) {
+    static void failOnCount(String output, double threshold) {
         def json = new JsonSlurper().parseText(output)
         def vulnCount = 0
         json.results?.each { result ->
@@ -90,48 +75,34 @@ public class OSVScannerRunnerTaskHelper {
                 }
             }
         }
-        def threshold = context.extension.failOnThreshold
         if(vulnCount >= threshold) {
             throw new RuntimeException("Vulnerabilities found; number found ($vulnCount) exceeds threshold ($threshold).")
         }
     }
 
-    static def failOnScore(def exitValue, def output, def context) {
+    static void failOnScore(String output, Logger logger, double threshold) {
         def json = new JsonSlurper().parseText(output)
-        def severities = []
+        def cvssScore = 0.0
         json.results?.each { result ->
             result.packages?.each { pkg ->
                 pkg.vulnerabilities?.each { vuln ->
                     vuln.severity?.each { sev ->
-                        severities.add(sev)
+                        def score = Cvss.fromVector(sev.score).calculateScore().getBaseScore()
+                        if (score > cvssScore) {
+                            cvssScore = score
+                        }
                     }
                 }
             }
         }
-        def cvssScore = 0
-        def threshold = context.extension.failOnThreshold
-        severities.each { item ->
-            def score = Cvss.fromVector(item.score).calculateScore().getBaseScore()
-            switch(item.type) {
-                case "CVSS_V2": cvssScore = cvssScore < score ? score : cvssScore; break
-                default: cvssScore = cvssScore < score ? score : cvssScore; break
-            }
-        }
 
         if(cvssScore != 0) {
-            context.logger.lifecycle("Vulnerabilities found; max score ($cvssScore)")
+            logger.lifecycle("Vulnerabilities found; max score ($cvssScore)")
         } else {
-            context.logger.lifecycle("No vulnerabilities found")
+            logger.lifecycle("No vulnerabilities found")
         }
         if(cvssScore > threshold) {
             throw new RuntimeException("Vulnerabilities found; max score ($cvssScore) exceeds threshold ($threshold).")
         }
     }
-
-    static def failOnExit(def exitValue, def output, def context) {
-        if(exitValue > 0 && exitValue < 127) {
-            throw new RuntimeException(context.failureMsg + " Exit: " + exitValue)
-        }
-    }
-
 }

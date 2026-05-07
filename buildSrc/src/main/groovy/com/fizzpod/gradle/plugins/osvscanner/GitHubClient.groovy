@@ -1,0 +1,96 @@
+/* (C) 2024-2026 */
+/* SPDX-License-Identifier: Apache-2.0 */
+package com.fizzpod.gradle.plugins.osvscanner
+
+import groovy.json.*
+import okhttp3.*
+
+public class GitHubClient {
+
+    private static final OkHttpClient okclient = new OkHttpClient()
+            .newBuilder()
+            .build()
+
+    static def resolve = { String repo, OS.Arch arch, OS.Family os, String version ->
+        def params = [
+            arch: arch,
+            os: os,
+            version: version,
+            repo: repo
+        ]
+        def context = [params: params]
+        def result = Optional.ofNullable(context)
+            .map(x -> GitHubClient.release(x))
+            .map(x -> GitHubClient.version(x))
+            .map(x -> GitHubClient.url(x))
+            .orElseThrow(() -> new RuntimeException("Unable to download from GitHub"))
+        return result
+
+    }.memoize()
+
+    static def url = { x ->
+        x.url = GitHubClient.getUrl(x.release, x.params.os, x.params.arch)
+        x.url? x: null
+    }
+
+    static def getUrl = { release, os, arch ->
+        def asset = release.assets.find {
+            Loggy.debug(it.name)
+            it.name.contains(os.id) && it.name.contains(arch.id)
+        }
+        return asset?.browser_download_url
+    }.memoize()
+
+    static def version = { x ->
+        x.version = x.release.tag_name
+        Loggy.debug(x.version)
+        x.version? x: null
+    }
+
+    static def release = { x ->
+        x.release = GitHubClient.getRelease(x.params.repo, x.params.version)
+        x.release? x: null
+    }
+
+    static def getRelease = { repo, version ->
+ 
+        def url = "https://api.github.com/repos/${repo}/releases/latest"
+        if(version != "latest") {
+            url = "https://api.github.com/repos/${repo}/releases/tags/${version}"
+        }
+        Request request = new Request.Builder()
+            .url(url)
+            .addHeader("Accept", "application/vnd.github+json")
+            .addHeader("X-GitHub-Api-Version", "2022-11-28")
+            .build()
+        def result = null
+        try(def response = okclient.newCall(request).execute()) {
+            String content = response.body().string()
+            Loggy.debug(content)
+            def code = response.code
+            
+            if(code == 403 || code == 429) {
+                def reset = response.header("x-ratelimit-reset")
+                def retryAfter = response.header("retry-after")
+                def message = "GitHub API rate limit exceeded. "
+                if(reset) {
+                    message += "Rate limit resets at ${new java.util.Date(reset.toLong() * 1000)}. "
+                }
+                if(retryAfter) {
+                    message += "Retry after ${retryAfter} seconds. "
+                }
+                throw new IOException(message + "status: ${code}")
+            }
+            
+            if(code != 200)  {
+                throw new IOException("Could not find release ${version} on repository ${repo}. status: ${code}")
+            }
+            
+            def jsonSlurper = new JsonSlurper()
+            result = jsonSlurper.parseText(content)
+        }
+        return result
+  
+    }.memoize()
+
+}

@@ -2,50 +2,57 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 package com.fizzpod.gradle.plugins.osvscanner
 
-import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerHelper.*
-import static com.fizzpod.gradle.plugins.osvscanner.OSVScannerRunnerTaskHelper.*
-
-import groovy.json.*
 import javax.inject.Inject
-import org.apache.commons.io.FileUtils
-import org.apache.commons.lang3.SystemUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemOperations
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.process.ExecOperations
+import org.gradle.api.tasks.UntrackedTask
 
-@org.gradle.api.tasks.UntrackedTask(because="Deletes lockfiles")
-public class OSVScannerDeleteLockfilesTask extends DefaultTask {
+@UntrackedTask(because="Deletes lockfiles")
+public abstract class OSVScannerDeleteLockfilesTask extends DefaultTask {
 
     public static final String NAME = "deleteLockfiles"
 
-    private Project project
-    private ExecOperations execOps
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract DirectoryProperty getProjectDir()
 
     @Inject
-    public OSVScannerDeleteLockfilesTask(Project project, ExecOperations execOps) {
-        this.project = project
-        this.execOps = execOps
-    }
+    protected abstract FileSystemOperations getFileSystemOperations()
 
-    static register(Project project) {
+    static def register(Project project) {
         project.getLogger().info("Registering task {}", NAME)
-        def taskContainer = project.getTasks()
-
-        taskContainer.create([name: NAME,
-            type: OSVScannerDeleteLockfilesTask,
-            dependsOn: [],
-            group: OSVScannerPlugin.GROUP,
-            description: 'Deletes gradle lockfiles'])
+        return project.tasks.register(NAME, OSVScannerDeleteLockfilesTask) {
+            it.group = OSVScannerPlugin.GROUP
+            it.description = 'Deletes gradle lockfiles'
+            it.getProjectDir().set(project.layout.projectDirectory)
+        }
     }
 
     @TaskAction
-    def runTask() {
-        OSVScannerDeleteLockfilesTask.run(this.project)
+    void runTask() {
+        run(getFileSystemOperations(), getProjectDir().get().asFile)
     }
 
-    static def run = { project ->
-        project.delete(project.fileTree(".").matching { include("*.lockfile") })
+    static void run(FileSystemOperations fsOps, File projectDir) {
+        fsOps.delete {
+            it.delete(projectDir.listFiles().findAll { it.name.endsWith(".lockfile") })
+            // More robust recursive delete if needed, but the original used project.fileTree(".")
+        }
+        // Original logic: project.delete(project.fileTree(".").matching { include("*.lockfile") })
+        // Let's match that more closely without Project.
+        // We can't use fileTree without Project easily in TaskAction.
+        // But we can use standard Java/Groovy file traversal.
+        projectDir.eachFileRecurse {
+            if (it.name.endsWith(".lockfile")) {
+                it.delete()
+            }
+        }
     }
 
 }
