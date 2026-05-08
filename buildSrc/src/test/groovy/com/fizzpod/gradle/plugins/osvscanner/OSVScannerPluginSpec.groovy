@@ -1,5 +1,5 @@
-/* (C) 2024-2026 */
-/* SPDX-License-Identifier: Apache-2.0 */
+  /* (C) 2024-2026   */
+  /* SPDX-License-Identifier: Apache-2.0   */
 package com.fizzpod.gradle.plugins.osvscanner
 
 import groovy.json.*
@@ -185,7 +185,8 @@ class OSVScannerPluginSpec extends Specification {
             reportFile.length() > 0
             new groovy.json.JsonSlurper().parse(reportFile) != null
     }
-/*
+
+    @Ignore
     def "run OSVScannerSbomTask"() {
         setup:
             
@@ -211,6 +212,7 @@ class OSVScannerPluginSpec extends Specification {
     }
 
 
+    @Ignore
     def "run OSVScannerLockAndScanTask"() {
         setup:
             fsFixture.create {
@@ -238,6 +240,7 @@ class OSVScannerPluginSpec extends Specification {
             !project.getTasksByName(OSVScannerLockAndScanTask.NAME, false).isEmpty()
     }
     
+    @Ignore
     def "run OSVScannerLockfileTask"() {
         setup:
             Project project = ProjectBuilder.builder().withProjectDir(temporaryFolder.getRoot()).build()
@@ -264,27 +267,39 @@ class OSVScannerPluginSpec extends Specification {
 
 
 
+
     def "run OSVScannerWriteLockfilesTask"() {
         setup:
-            Project project = ProjectBuilder.builder().withProjectDir(temporaryFolder.getRoot()).build()
-            //copy the .osv-scanner directory
-            FileUtils.copyDirectory(new File(FileUtils.current(), '.osv-scanner'), temporaryFolder.getRoot())
-            //copy the .git directory
-            FileUtils.copyDirectory(new File(FileUtils.current(), '.git'), temporaryFolder.getRoot())
-            //copy the build.gradle
-            FileUtils.copyFileToDirectory(new File(FileUtils.current(), 'build.gradle'), temporaryFolder.getRoot())
-            //copy the settings.gradle
-            FileUtils.copyFileToDirectory(new File(FileUtils.current(), 'settings.gradle'), temporaryFolder.getRoot())
+            fsFixture.create {
+                file('settings.gradle').text = '''
+                    rootProject.name = 'test'
+                '''
+                file('build.gradle').text = '''
+                    plugins {
+                        id 'java'
+                    }
+                    dependencyLocking {
+                        lockAllConfigurations()
+                    }
+                    repositories {
+                        mavenCentral()
+                    }
+                    dependencies {
+                        implementation 'junit:junit:4.13.2'
+                    }
+                '''
+            }
+            def root = fsFixture.getCurrentPath().toFile()
+            Project project = ProjectBuilder.builder().withProjectDir(root).build()
 
         when:
             def plugin = new OSVScannerPlugin()
             plugin.apply(project)
-            project.getTasksByName(OSVScannerInstallTask.NAME, false).iterator().next().runTask()
             def task = project.getTasksByName(OSVScannerWriteLockfilesTask.NAME, false).iterator().next()
+            task.getProjectDir().set(root)
             task.runTask()
         then: 
-            //TODO proper assertion
             !project.getTasksByName(OSVScannerWriteLockfilesTask.NAME, false).isEmpty()
+            new File(root, "gradle.lockfile").exists() || new File(root, "gradle/dependency-locks").exists()
     }
-    */
 }
