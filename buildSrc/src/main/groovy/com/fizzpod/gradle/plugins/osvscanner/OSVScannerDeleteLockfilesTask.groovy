@@ -36,22 +36,14 @@ public abstract class OSVScannerDeleteLockfilesTask extends DefaultTask {
 
     @TaskAction
     void runTask() {
-        run(getFileSystemOperations(), getProjectDir().get().asFile)
+        def projectDir = getProjectDir().get()
+        def tree = projectDir.getAsFileTree().matching { include("**/*.lockfile") }
+        run(getFileSystemOperations(), tree)
     }
 
-    static void run(FileSystemOperations fsOps, File projectDir) {
+    static void run(FileSystemOperations fsOps, org.gradle.api.file.FileTree tree) {
         fsOps.delete {
-            it.delete(projectDir.listFiles().findAll { it.name.endsWith(".lockfile") })
-            // More robust recursive delete if needed, but the original used project.fileTree(".")
-        }
-        // Original logic: project.delete(project.fileTree(".").matching { include("*.lockfile") })
-        // Let's match that more closely without Project.
-        // We can't use fileTree without Project easily in TaskAction.
-        // But we can use standard Java/Groovy file traversal.
-        projectDir.eachFileRecurse {
-            if (it.name.endsWith(".lockfile")) {
-                it.delete()
-            }
+            it.delete(tree)
         }
     }
 
