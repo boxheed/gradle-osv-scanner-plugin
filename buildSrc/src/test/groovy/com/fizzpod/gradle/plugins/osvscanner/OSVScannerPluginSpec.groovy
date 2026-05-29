@@ -302,4 +302,40 @@ class OSVScannerPluginSpec extends Specification {
             !project.getTasksByName(OSVScannerWriteLockfilesTask.NAME, false).isEmpty()
             new File(root, "gradle.lockfile").exists() || new File(root, "gradle/dependency-locks").exists()
     }
+
+    def "osvSbom should fail when failOn is count and threshold is reached"() {
+        setup:
+            def root = fsFixture.getCurrentPath().toFile()
+            Project project = ProjectBuilder.builder().withProjectDir(root).build()
+
+            // Mock OSV-Scanner binary that returns a vulnerability but exits with 0
+            def mockBinary = new File(root, "osv-scanner" + (System.getProperty("os.name").toLowerCase().contains("windows") ? ".bat" : ""))
+            def jsonOutput = '{"results": [{"packages": [{"vulnerabilities": [{}]}]}]}'
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                mockBinary.text = "@echo off\r\necho " + jsonOutput.replace('"', '^"')
+            } else {
+                mockBinary.text = "#!/bin/sh\necho '" + jsonOutput + "'"
+                mockBinary.setExecutable(true)
+            }
+
+            def plugin = new OSVScannerPlugin()
+            plugin.apply(project)
+
+            // Configure extension
+            def extension = project.extensions.getByType(OSVScannerPluginExtension)
+            extension.getBinary().set(mockBinary.absolutePath)
+            extension.getFailOn().set("count")
+            extension.getFailOnThreshold().set(1.0d)
+            extension.getSbom().set("some.sbom")
+            extension.getFormat().set("json")
+
+            def task = project.getTasksByName(OSVScannerSbomTask.NAME, false).iterator().next()
+            task.getOsvScannerBinary().set(mockBinary)
+
+        when:
+            task.runTask()
+
+        then:
+            thrown(RuntimeException)
+    }
 }

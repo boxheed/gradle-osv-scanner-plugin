@@ -29,6 +29,12 @@ public abstract class OSVScannerSbomTask extends DefaultTask {
     @Input
     abstract Property<String> getFlags()
 
+    @Input
+    abstract Property<String> getFailOn()
+
+    @Input
+    abstract Property<Double> getFailOnThreshold()
+
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
     abstract RegularFileProperty getOsvScannerBinary()
@@ -54,6 +60,8 @@ public abstract class OSVScannerSbomTask extends DefaultTask {
             it.description = 'Runs osv-scanner with --sbom on your project'
             it.getFormat().set(extension.format)
             it.getFlags().set(extension.flags)
+            it.getFailOn().set(extension.failOn)
+            it.getFailOnThreshold().set(extension.failOnThreshold)
             it.getSbom().set(extension.sbom)
             it.getProjectDir().set(project.layout.projectDirectory)
             it.getReportFile().set(project.layout.buildDirectory.file(extension.location.map { loc ->
@@ -83,8 +91,8 @@ public abstract class OSVScannerSbomTask extends DefaultTask {
             commandList,
             getReportFile().get().asFile,
             logger,
-            "exit",
-            0.0,
+            getFailOn().get(),
+            getFailOnThreshold().get(),
             "Vulnerabilities found."
         )
     }
