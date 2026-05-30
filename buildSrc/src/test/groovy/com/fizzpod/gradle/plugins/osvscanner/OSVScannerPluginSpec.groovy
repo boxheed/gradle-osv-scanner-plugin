@@ -186,7 +186,6 @@ class OSVScannerPluginSpec extends Specification {
             new groovy.json.JsonSlurper().parse(reportFile) != null
     }
 
-    @Ignore
     def "run OSVScannerSbomTask"() {
         setup:
             
@@ -200,20 +199,105 @@ class OSVScannerPluginSpec extends Specification {
             //copy the settings.gradle
             FileUtils.copyFileToDirectory(new File(FileUtils.current(), 'settings.gradle'), temporaryFolder.getRoot())
 
+            // Create dummy CycloneDX SBOM file
+            new File(temporaryFolder.getRoot(), "dummy.cdx.json").text = '''{
+              "bomFormat": "CycloneDX",
+              "specVersion": "1.4",
+              "serialNumber": "urn:uuid:3e671687-395b-418a-9c90-fdada50f239e",
+              "version": 1,
+              "metadata": {
+                "component": {
+                  "name": "dummy-project",
+                  "version": "1.0.0",
+                  "type": "library"
+                }
+              },
+              "components": [
+                {
+                  "name": "org.apache.commons:commons-lang3",
+                  "version": "3.12.0",
+                  "type": "library",
+                  "purl": "pkg:maven/org.apache.commons/commons-lang3@3.12.0"
+                }
+              ]
+            }'''
+
         when:
             def plugin = new OSVScannerPlugin()
             plugin.apply(project)
+            def extension = project.extensions.getByType(OSVScannerPluginExtension)
+            extension.getSbom().set("dummy.cdx.json")
+            extension.getFailOn().set("count")
+            extension.getFailOnThreshold().set(100.0d)
+            project.getTasksByName(OSVScannerResolveVersionTask.NAME, false).iterator().next().runTask()
             project.getTasksByName(OSVScannerInstallTask.NAME, false).iterator().next().runTask()
             def task = project.getTasksByName(OSVScannerSbomTask.NAME, false).iterator().next()
             task.runTask()
         then: 
-            //TODO proper assertion
             !project.getTasksByName(OSVScannerSbomTask.NAME, false).isEmpty()
+            def reportFile = new File(project.buildDir, "osv-scanner/osv-scanner-sbom.json")
+            reportFile.exists()
+            reportFile.length() > 0
+            new groovy.json.JsonSlurper().parse(reportFile) != null
     }
 
 
-    @Ignore
     def "run OSVScannerLockAndScanTask"() {
+        setup:
+            fsFixture.create {
+                file('settings.gradle').text = '''
+                    rootProject.name = 'test'
+                '''
+                file('build.gradle').text = '''
+                    plugins {
+                        id 'java'
+                    }
+                    dependencyLocking {
+                        lockAllConfigurations()
+                    }
+                    repositories {
+                        mavenCentral()
+                    }
+                    dependencies {
+                        implementation 'org.apache.commons:commons-lang3:3.12.0'
+                    }
+                '''
+            }
+            def root = fsFixture.getCurrentPath().toFile()
+            Project project = ProjectBuilder.builder().withProjectDir(root).build()
+
+            // Copy gradle wrapper files so the task can run gradlew in the sandbox directory
+            def currentDir = FileUtils.current()
+            FileUtils.copyFileToDirectory(new File(currentDir, "gradlew"), root)
+            FileUtils.copyFileToDirectory(new File(currentDir, "gradlew.bat"), root)
+            FileUtils.copyDirectory(new File(currentDir, "gradle"), new File(root, "gradle"))
+            new File(root, "gradlew").setExecutable(true)
+
+            // Copy .git directory
+            FileUtils.copyDirectory(new File(currentDir, ".git"), new File(root, ".git"))
+
+        when:
+            def plugin = new OSVScannerPlugin()
+            plugin.apply(project)
+            def extension = project.extensions.getByType(OSVScannerPluginExtension)
+            extension.getFailOn().set("count")
+            extension.getFailOnThreshold().set(100.0d)
+            
+            project.getTasksByName(OSVScannerResolveVersionTask.NAME, false).iterator().next().runTask()
+            project.getTasksByName(OSVScannerInstallTask.NAME, false).iterator().next().runTask()
+            
+            def task = project.getTasksByName(OSVScannerLockAndScanTask.NAME, false).iterator().next()
+            task.getGradleExecutable().set(new File(root, System.getProperty("os.name").toLowerCase().contains("windows") ? "gradlew.bat" : "gradlew").absolutePath)
+            task.runTask()
+        then: 
+            !project.getTasksByName(OSVScannerLockAndScanTask.NAME, false).isEmpty()
+            def reportFile = new File(project.buildDir, "osv-scanner/osv-scanner-scan.json")
+            reportFile.exists()
+            reportFile.length() > 0
+            new groovy.json.JsonSlurper().parse(reportFile) != null
+    }
+    
+    def "run OSVScannerLockfileTask"() {
         setup:
             fsFixture.create {
                 copyFromClasspath('/gradle.lockfile.test', 'gradle.lockfile')
@@ -221,46 +305,28 @@ class OSVScannerPluginSpec extends Specification {
             }
             def root = fsFixture.getCurrentPath().toFile()
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
-            //copy the .osv-scanner directory
-            //FileUtils.copyDirectory(new File(FileUtils.current(), '.osv-scanner'), temporaryFolder.getRoot())
-            //copy the .git directory
-            FileUtils.copyDirectory(new File(FileUtils.current(), '.git'), temporaryFolder.getRoot())
-            //copy the build.gradle
-            FileUtils.copyFileToDirectory(new File(FileUtils.current(), 'build.gradle'), temporaryFolder.getRoot())
-            //copy the settings.gradle
-            FileUtils.copyFileToDirectory(new File(FileUtils.current(), 'settings.gradle'), temporaryFolder.getRoot())
 
         when:
             def plugin = new OSVScannerPlugin()
             plugin.apply(project)
-            def task = project.getTasksByName(OSVScannerLockAndScanTask.NAME, false).iterator().next()
-            task.runTask()
-        then: 
-            //TODO proper assertion
-            !project.getTasksByName(OSVScannerLockAndScanTask.NAME, false).isEmpty()
-    }
-    
-    @Ignore
-    def "run OSVScannerLockfileTask"() {
-        setup:
-            Project project = ProjectBuilder.builder().withProjectDir(temporaryFolder.getRoot()).build()
-            //copy the .osv-scanner directory
-            FileUtils.copyDirectory(new File(FileUtils.current(), '.osv-scanner'), temporaryFolder.getRoot())
-            //copy the .git directory
-            FileUtils.copyDirectory(new File(FileUtils.current(), '.git'), temporaryFolder.getRoot())
-            //copy the build.gradle
-            FileUtils.copyFileToDirectory(new File(FileUtils.current(), 'build.gradle'), temporaryFolder.getRoot())
-            //copy the settings.gradle
-            FileUtils.copyFileToDirectory(new File(FileUtils.current(), 'settings.gradle'), temporaryFolder.getRoot())
-
-        when:
-            def plugin = new OSVScannerPlugin()
-            plugin.apply(project)
+            def extension = project.extensions.getByType(OSVScannerPluginExtension)
+            extension.getLockfiles().set(["gradle.lockfile"])
+            
+            project.getTasksByName(OSVScannerResolveVersionTask.NAME, false).iterator().next().runTask()
+            project.getTasksByName(OSVScannerInstallTask.NAME, false).iterator().next().runTask()
+            
             def task = project.getTasksByName(OSVScannerLockfileTask.NAME, false).iterator().next()
-            task.runTask()
+            try {
+                task.runTask()
+            } catch (Exception e) {
+                // Ignore task failure due to vulnerability exit code
+            }
         then: 
-            //TODO proper assertion
             !project.getTasksByName(OSVScannerLockfileTask.NAME, false).isEmpty()
+            def reportFile = new File(project.buildDir, "osv-scanner/osv-scanner-lockfiles.json")
+            reportFile.exists()
+            reportFile.length() > 0
+            new groovy.json.JsonSlurper().parse(reportFile) != null
     }
 
 
