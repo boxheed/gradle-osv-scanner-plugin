@@ -24,8 +24,8 @@ class OSVScannerPluginSpec extends Specification {
     def "initialise plugin"() {
         setup:
             fsFixture.create {
-                copyFromClasspath('/gradle.lockfile')
-                copyFromClasspath('/settings-gradle.lockfile')
+                copyFromClasspath('/gradle.lockfile.test', 'gradle.lockfile')
+                copyFromClasspath('/settings-gradle.lockfile.test', 'settings-gradle.lockfile')
             }
             def root = fsFixture.getCurrentPath().toFile()
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
@@ -44,8 +44,8 @@ class OSVScannerPluginSpec extends Specification {
     def "run osvScannerInstallTask"() {
         setup:
             fsFixture.create {
-                copyFromClasspath('/gradle.lockfile')
-                copyFromClasspath('/settings-gradle.lockfile')
+                copyFromClasspath('/gradle.lockfile.test', 'gradle.lockfile')
+                copyFromClasspath('/settings-gradle.lockfile.test', 'settings-gradle.lockfile')
             }
             def root = fsFixture.getCurrentPath().toFile()
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
@@ -73,8 +73,8 @@ class OSVScannerPluginSpec extends Specification {
     def "run osvScannerInstallAllTask"() {
         setup:
             fsFixture.create {
-                copyFromClasspath('/gradle.lockfile')
-                copyFromClasspath('/settings-gradle.lockfile')
+                copyFromClasspath('/gradle.lockfile.test', 'gradle.lockfile')
+                copyFromClasspath('/settings-gradle.lockfile.test', 'settings-gradle.lockfile')
             }
             def root = fsFixture.getCurrentPath().toFile()
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
@@ -101,8 +101,8 @@ class OSVScannerPluginSpec extends Specification {
     def "run osvScannerLicencesSummaryTask"() {
         setup:
             fsFixture.create {
-                copyFromClasspath('/gradle.lockfile')
-                copyFromClasspath('/settings-gradle.lockfile')
+                copyFromClasspath('/gradle.lockfile.test', 'gradle.lockfile')
+                copyFromClasspath('/settings-gradle.lockfile.test', 'settings-gradle.lockfile')
             }
             def root = fsFixture.getCurrentPath().toFile()
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
@@ -141,8 +141,8 @@ class OSVScannerPluginSpec extends Specification {
     def "run osvScannerLicencesTask"() {
         setup:
             fsFixture.create {
-                copyFromClasspath('/gradle.lockfile')
-                copyFromClasspath('/settings-gradle.lockfile')
+                copyFromClasspath('/gradle.lockfile.test', 'gradle.lockfile')
+                copyFromClasspath('/settings-gradle.lockfile.test', 'settings-gradle.lockfile')
             }
             def root = fsFixture.getCurrentPath().toFile()
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
@@ -166,8 +166,8 @@ class OSVScannerPluginSpec extends Specification {
     def "run OSVScannerScanTask"() {
         setup:
             fsFixture.create {
-                copyFromClasspath('/gradle.lockfile')
-                copyFromClasspath('/settings-gradle.lockfile')
+                copyFromClasspath('/gradle.lockfile.test', 'gradle.lockfile')
+                copyFromClasspath('/settings-gradle.lockfile.test', 'settings-gradle.lockfile')
             }
             def root = fsFixture.getCurrentPath().toFile()
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
@@ -216,8 +216,8 @@ class OSVScannerPluginSpec extends Specification {
     def "run OSVScannerLockAndScanTask"() {
         setup:
             fsFixture.create {
-                copyFromClasspath('/gradle.lockfile')
-                copyFromClasspath('/settings-gradle.lockfile')
+                copyFromClasspath('/gradle.lockfile.test', 'gradle.lockfile')
+                copyFromClasspath('/settings-gradle.lockfile.test', 'settings-gradle.lockfile')
             }
             def root = fsFixture.getCurrentPath().toFile()
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
@@ -292,11 +292,19 @@ class OSVScannerPluginSpec extends Specification {
             def root = fsFixture.getCurrentPath().toFile()
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
 
+            // Copy gradle wrapper files so the task can run gradlew in the sandbox directory
+            def currentDir = FileUtils.current()
+            FileUtils.copyFileToDirectory(new File(currentDir, "gradlew"), root)
+            FileUtils.copyFileToDirectory(new File(currentDir, "gradlew.bat"), root)
+            FileUtils.copyDirectory(new File(currentDir, "gradle"), new File(root, "gradle"))
+            new File(root, "gradlew").setExecutable(true)
+
         when:
             def plugin = new OSVScannerPlugin()
             plugin.apply(project)
             def task = project.getTasksByName(OSVScannerWriteLockfilesTask.NAME, false).iterator().next()
             task.getProjectDir().set(root)
+            task.getGradleExecutable().set(new File(root, System.getProperty("os.name").toLowerCase().contains("windows") ? "gradlew.bat" : "gradlew").absolutePath)
             task.runTask()
         then: 
             !project.getTasksByName(OSVScannerWriteLockfilesTask.NAME, false).isEmpty()
