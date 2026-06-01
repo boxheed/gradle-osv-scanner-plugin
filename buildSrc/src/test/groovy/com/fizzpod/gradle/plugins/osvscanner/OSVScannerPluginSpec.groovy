@@ -20,6 +20,17 @@ class OSVScannerPluginSpec extends Specification {
     @TempDir
     FileSystemFixture fsFixture
 
+    private File getProjectRootDir() {
+        File current = FileUtils.current().canonicalFile
+        while (current != null) {
+            if (new File(current, "gradlew").exists()) {
+                return current
+            }
+            current = current.parentFile
+        }
+        return FileUtils.current().canonicalFile
+    }
+
     
     def "initialise plugin"() {
         setup:
@@ -190,14 +201,15 @@ class OSVScannerPluginSpec extends Specification {
         setup:
             
             Project project = ProjectBuilder.builder().withProjectDir(temporaryFolder.getRoot()).build()
+            def projectRootDir = getProjectRootDir()
             //copy the .osv-scanner directory
-            FileUtils.copyDirectory(new File(FileUtils.current(), '.osv-scanner'), temporaryFolder.getRoot())
+            FileUtils.copyDirectory(new File(projectRootDir, '.osv-scanner'), temporaryFolder.getRoot())
             //copy the .git directory
-            FileUtils.copyDirectory(new File(FileUtils.current(), '.git'), temporaryFolder.getRoot())
+            FileUtils.copyDirectory(new File(projectRootDir, '.git'), temporaryFolder.getRoot())
             //copy the build.gradle
-            FileUtils.copyFileToDirectory(new File(FileUtils.current(), 'build.gradle'), temporaryFolder.getRoot())
+            FileUtils.copyFileToDirectory(new File(projectRootDir, 'build.gradle'), temporaryFolder.getRoot())
             //copy the settings.gradle
-            FileUtils.copyFileToDirectory(new File(FileUtils.current(), 'settings.gradle'), temporaryFolder.getRoot())
+            FileUtils.copyFileToDirectory(new File(projectRootDir, 'settings.gradle'), temporaryFolder.getRoot())
 
             // Create dummy CycloneDX SBOM file
             new File(temporaryFolder.getRoot(), "dummy.cdx.json").text = '''{
@@ -267,7 +279,7 @@ class OSVScannerPluginSpec extends Specification {
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
 
             // Copy gradle wrapper files so the task can run gradlew in the sandbox directory
-            def currentDir = FileUtils.current()
+            def currentDir = getProjectRootDir()
             FileUtils.copyFileToDirectory(new File(currentDir, "gradlew"), root)
             FileUtils.copyFileToDirectory(new File(currentDir, "gradlew.bat"), root)
             FileUtils.copyDirectory(new File(currentDir, "gradle"), new File(root, "gradle"))
@@ -359,7 +371,7 @@ class OSVScannerPluginSpec extends Specification {
             Project project = ProjectBuilder.builder().withProjectDir(root).build()
 
             // Copy gradle wrapper files so the task can run gradlew in the sandbox directory
-            def currentDir = FileUtils.current()
+            def currentDir = getProjectRootDir()
             FileUtils.copyFileToDirectory(new File(currentDir, "gradlew"), root)
             FileUtils.copyFileToDirectory(new File(currentDir, "gradlew.bat"), root)
             FileUtils.copyDirectory(new File(currentDir, "gradle"), new File(root, "gradle"))
