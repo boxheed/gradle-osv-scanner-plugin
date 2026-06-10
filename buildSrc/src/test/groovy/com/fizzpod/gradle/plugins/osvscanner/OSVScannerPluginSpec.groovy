@@ -202,10 +202,16 @@ class OSVScannerPluginSpec extends Specification {
             
             Project project = ProjectBuilder.builder().withProjectDir(temporaryFolder.getRoot()).build()
             def projectRootDir = getProjectRootDir()
-            //copy the .osv-scanner directory
-            FileUtils.copyDirectory(new File(projectRootDir, '.osv-scanner'), temporaryFolder.getRoot())
-            //copy the .git directory
-            FileUtils.copyDirectory(new File(projectRootDir, '.git'), temporaryFolder.getRoot())
+            //copy the .osv-scanner directory if it exists
+            def osvScannerDir = new File(projectRootDir, '.osv-scanner')
+            if (osvScannerDir.exists()) {
+                FileUtils.copyDirectory(osvScannerDir, new File(temporaryFolder.getRoot(), '.osv-scanner'))
+            }
+            //copy the .git directory if it exists
+            def gitDir = new File(projectRootDir, '.git')
+            if (gitDir.exists()) {
+                FileUtils.copyDirectory(gitDir, new File(temporaryFolder.getRoot(), '.git'))
+            }
             //copy the build.gradle
             FileUtils.copyFileToDirectory(new File(projectRootDir, 'build.gradle'), temporaryFolder.getRoot())
             //copy the settings.gradle
@@ -285,8 +291,11 @@ class OSVScannerPluginSpec extends Specification {
             FileUtils.copyDirectory(new File(currentDir, "gradle"), new File(root, "gradle"))
             new File(root, "gradlew").setExecutable(true)
 
-            // Copy .git directory
-            FileUtils.copyDirectory(new File(currentDir, ".git"), new File(root, ".git"))
+            // Copy .git directory if it exists
+            def gitDir = new File(currentDir, ".git")
+            if (gitDir.exists()) {
+                FileUtils.copyDirectory(gitDir, new File(root, ".git"))
+            }
 
         when:
             def plugin = new OSVScannerPlugin()
