@@ -82,6 +82,8 @@ You can use the `osvSbom` task to initiate a vulnerability scan on a specific SB
 ./gradlew osvSbom
 ```
 
+The plugin supports 3 failure modes on the results of the scan. Note that this is only supported of the `format` is `json`. To configure the failure mode see `failOn` and `failOnThreshold`
+
 ### Scanning lockfiles
 
 You can use the `osvLockfile` task to initiate a vulnerability scan on a specific lockfile or multiple lockfile files as specified by the `lockfiles` configuration item. The `lockfiles` is an array of lockfiles, or
