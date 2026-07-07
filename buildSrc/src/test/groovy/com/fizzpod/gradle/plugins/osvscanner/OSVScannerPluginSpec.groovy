@@ -185,6 +185,9 @@ class OSVScannerPluginSpec extends Specification {
         when:
             def plugin = new OSVScannerPlugin()
             plugin.apply(project)
+            def extension = project.extensions.getByType(OSVScannerPluginExtension)
+            extension.getFailOn().set("count")
+            extension.getFailOnThreshold().set(100.0d)
             project.getTasksByName(OSVScannerResolveVersionTask.NAME, false).iterator().next().runTask()
             project.getTasksByName(OSVScannerInstallTask.NAME, false).iterator().next().runTask()
             def task = project.getTasksByName(OSVScannerScanTask.NAME, false).iterator().next()

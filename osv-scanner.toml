@@ -33,3 +33,7 @@ license.override = ["EPL-2.0"]
 [[PackageOverrides]]
 name = "org.kohsuke:github-api"
 license.override = ["MIT"]
+
+[[IgnoredVulns]]
+id = "GHSA-5jmj-h7xm-6q6v"
+reason = "Vulnerability in buildSrc dependency jackson-databind version 2.21.4 (no fixed version currently released in the 2.21 line on Maven Central)."
