@@ -52,6 +52,40 @@ class PerformanceSpec extends Specification {
         noExceptionThrown()
     }
 
+    def "benchmark failOnCount"() {
+        setup:
+        def threshold = 100000.0
+
+        // Generate a large JSON
+        def builder = new JsonBuilder()
+        def largeData = [
+            results: (1..100).collect {
+                [
+                    packages: (1..10).collect {
+                        [
+                            vulnerabilities: (1..50).collect {
+                                [ id: "VULN-X" ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+        builder(largeData)
+        def output = builder.toString()
+
+        when:
+        long start = System.currentTimeMillis()
+        for(int i=0; i<100; i++) {
+            OSVScannerRunnerTaskHelper.failOnCount(output, threshold)
+        }
+        long end = System.currentTimeMillis()
+        println "failOnCount execution time for 100 iterations: ${end - start} ms"
+
+        then:
+        noExceptionThrown()
+    }
+
     def "verify failOnCount logic"() {
         setup:
         def threshold = 5.0
