@@ -70,9 +70,7 @@ public class OSVScannerRunnerTaskHelper {
         def vulnCount = 0
         json.results?.each { result ->
             result.packages?.each { pkg ->
-                pkg.vulnerabilities?.each { vuln ->
-                    vulnCount++
-                }
+                vulnCount += pkg.vulnerabilities?.size() ?: 0
             }
         }
         if(vulnCount >= threshold) {
